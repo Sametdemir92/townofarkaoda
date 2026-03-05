@@ -4,7 +4,7 @@
 
 export type GamePhase = "lobby" | "night" | "day_discussion" | "day_voting" | "ended"
 
-export type RoleName = "MAFYA" | "DOKTOR" | "DEDEKTIF" | "VATANDAS"
+export type RoleName = "MAFYA" | "DOKTOR" | "DEDEKTIF" | "VATANDAS" | "MEDYUM"
 
 export type Team = "town" | "mafia"
 
@@ -121,6 +121,14 @@ export const ROLE_DEFINITIONS: Record<RoleName, RoleDefinition> = {
     description: "Geceleri bir kisinin rolunu arastiran ozel dedektif. Mafyayi bulmak icin en onemli rol.",
     nightAbility: "Bir oyuncunun rolunu ogrenr",
     emoji: "🔍",
+  },
+  MEDYUM: {
+    name: "MEDYUM",
+    displayName: "Medyum",
+    team: "town",
+    description: "Ölülerin ruhlarıyla iletişim kurabilen kasabalı. Gündüz veya gece fark etmeksizin ölülerin sohbetini okuyabilir ve onlarla konuşabilir.",
+    nightAbility: null,
+    emoji: "🔮",
   },
   VATANDAS: {
     name: "VATANDAS",

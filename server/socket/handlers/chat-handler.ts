@@ -35,36 +35,40 @@ export function registerChatHandlers(io: TypedServer, socket: TypedSocket): void
       if (engine) {
         const isAlive = engine.isPlayerAlive(socketData.playerId)
 
+        const playerRole = engine.getPlayerRole(socketData.playerId)
+
         if (!isAlive) {
           if (channel !== "DEAD") {
             socket.emit("error", { message: "Ölü oyuncular sadece Ölüler kanalında konuşabilir" })
             return
           }
         } else {
+          // Yaşayan oyuncu
           if (channel === "DEAD") {
-            socket.emit("error", { message: "Hayattaki oyuncular Ölüler kanalını kullanamaz" })
-            return
+            if (playerRole !== "MEDYUM") {
+              socket.emit("error", { message: "Sadece Medyum ölülerle konuşabilir" })
+              return
+            }
           }
 
           const state = engine.getState()
 
           // Faz kontrolleri
           if (state.phase === "night") {
-            // Gece sadece mafya kendi aralarinda konusabilir
-            if (channel !== "MAFIA") {
-              socket.emit("error", { message: "Gece sadece mafya chati kullanilabilir" })
+            // Gece sadece mafya kendi aralarinda konusabilir (veya Medyum ölülerle konuşabilir)
+            if (channel !== "MAFIA" && channel !== "DEAD") {
+              socket.emit("error", { message: "Gece sadece mafya chati veya ölüler chati kullanilabilir" })
               return
             }
 
-            const playerRole = engine.getPlayerRole(socketData.playerId)
-            if (playerRole !== "MAFYA") {
-              socket.emit("error", { message: "Sadece mafya uyeleri gece konusabilir" })
+            if (channel === "MAFIA" && playerRole !== "MAFYA") {
+              socket.emit("error", { message: "Sadece mafya uyeleri mafya chatini kullanabilir" })
               return
             }
           }
 
           if (state.phase === "day_discussion" || state.phase === "day_voting") {
-            // Gunduz herkes PUBLIC kanalda konusabilir
+            // Gunduz herkes PUBLIC kanalda konusabilir (Veya Medyum ölülerle)
             if (channel === "MAFIA") {
               socket.emit("error", { message: "Gunduz mafya chati kullanilamaz" })
               return
@@ -108,15 +112,15 @@ export function registerChatHandlers(io: TypedServer, socket: TypedSocket): void
           }
         }
       } else if (channel === "DEAD") {
-        // Sadece olu oyunculara gonder
+        // Sadece olu oyunculara VEYA Medyum olanlara gonder
         if (engine) {
           const state = engine.getState()
-          const deadPlayers = state.players.filter(p => !p.isAlive)
+          const deadOrMedyumPlayers = state.players.filter(p => !p.isAlive || p.role === "MEDYUM")
           const sockets = await io.in(socketData.roomId).fetchSockets()
 
           for (const s of sockets) {
             const sd = s.data as SocketData
-            if (sd.playerId && deadPlayers.some((p) => p.id === sd.playerId)) {
+            if (sd.playerId && deadOrMedyumPlayers.some((p) => p.id === sd.playerId)) {
               s.emit("chat:message", chatMessage)
             }
           }

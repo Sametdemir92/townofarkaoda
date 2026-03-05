@@ -8,12 +8,14 @@ import { MafyaRole } from "./mafya"
 import { DoktorRole } from "./doktor"
 import { DedektifRole } from "./dedektif"
 import { VatandasRole } from "./vatandas"
+import { MedyumRole } from "./medyum"
 
 // Rol instance'lari
 const roleInstances: Record<RoleName, BaseRole> = {
   MAFYA: new MafyaRole(),
   DOKTOR: new DoktorRole(),
   DEDEKTIF: new DedektifRole(),
+  MEDYUM: new MedyumRole(),
   VATANDAS: new VatandasRole(),
 }
 
@@ -36,9 +38,9 @@ export function assignRoles(players: Player[]): Player[] {
   // Baslangic olarak 1 Doktor, 1 Dedektif
   let doktorCount = 1
   let dedektifCount = 1
+  let medyumCount = 0
 
   // Oyuncu sayisina gore rastgele ekstra ozel rol ekleme (birden fazla ayni rolu atayabilme)
-  // Ornegin, 6 ve uzeri oyuncu varsa belli bir olasilikla 2. doktor veya 2. dedektif eklenebilir.
   const extraRolesPossible = count > 5 ? count - (mafyaCount + 2) : 0
   if (extraRolesPossible > 0) {
     // Rastgele olarak fazladan doktor atansin (%30 sans)
@@ -49,12 +51,17 @@ export function assignRoles(players: Player[]): Player[] {
     if (Math.random() < 0.3) {
       dedektifCount += 1
     }
+    // Medyum atanma ihtimali (%40 sans - max 1 medyum yeterli genelde)
+    if (Math.random() < 0.4) {
+      medyumCount = 1
+    }
   }
 
   // Ust limitleri asmamak icin guvenlik onlemi
-  let tempVatandas = count - (mafyaCount + doktorCount + dedektifCount)
+  let tempVatandas = count - (mafyaCount + doktorCount + dedektifCount + medyumCount)
   if (tempVatandas < 0) {
-    if (doktorCount > 1) { doktorCount--; tempVatandas++; }
+    if (medyumCount > 0) { medyumCount--; tempVatandas++; }
+    if (tempVatandas < 0 && doktorCount > 1) { doktorCount--; tempVatandas++; }
     if (tempVatandas < 0 && dedektifCount > 1) { dedektifCount--; tempVatandas++; }
   }
   const vatandasCount = Math.max(0, tempVatandas)
@@ -64,6 +71,7 @@ export function assignRoles(players: Player[]): Player[] {
     ...Array(mafyaCount).fill("MAFYA"),
     ...Array(doktorCount).fill("DOKTOR"),
     ...Array(dedektifCount).fill("DEDEKTIF"),
+    ...Array(medyumCount).fill("MEDYUM"),
     ...Array(vatandasCount).fill("VATANDAS"),
   ]
 
