@@ -103,7 +103,7 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket): void
           await prisma.player.update({
             where: { id: player.id },
             data: { role: player.role as any },
-          }).catch(() => {}) // Bot id'leri DB'de olmayabilir
+          }).catch(() => { }) // Bot id'leri DB'de olmayabilir
 
           const sockets = await io.in(roomId).fetchSockets()
           const playerSocket = sockets.find(
@@ -119,8 +119,21 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket): void
         }
       }
 
-      // Herkese state gonder (roller gizli)
-      io.to(roomId).emit("game:state-update", sanitizeStateForPublic(state))
+      // Herkese durumunu (olu/diri) gozeterek state gonder
+      const sanitizedState = sanitizeStateForPublic(state)
+      io.in(roomId).fetchSockets().then((sockets) => {
+        sockets.forEach((s) => {
+          const sd = s.data as SocketData
+          const player = state.players.find((p) => p.id === sd.playerId)
+          if (player && !player.isAlive) {
+            // Oluler herkesin rolunu gorur ama night actions gormez
+            s.emit("game:state-update", { ...state, nightActions: [] })
+          } else {
+            // Yasiyorsa veya oyuncu degilse (seyirci vs) sanitize edilmis gonder
+            s.emit("game:state-update", sanitizedState)
+          }
+        })
+      })
 
       // Bot gece aksiyonlarini baslat
       scheduleBotNightActions(engine, io, roomId)
@@ -292,7 +305,18 @@ function setupEngineEvents(
   roomId: string
 ): void {
   engine.onEvent("stateChange", (state: GameState) => {
-    io.to(roomId).emit("game:state-update", sanitizeStateForPublic(state))
+    const sanitizedState = sanitizeStateForPublic(state)
+    io.in(roomId).fetchSockets().then((sockets) => {
+      sockets.forEach((s) => {
+        const sd = s.data as SocketData
+        const player = state.players.find((p) => p.id === sd.playerId)
+        if (player && !player.isAlive) {
+          s.emit("game:state-update", { ...state, nightActions: [] })
+        } else {
+          s.emit("game:state-update", sanitizedState)
+        }
+      })
+    })
   })
 
   engine.onEvent("phaseChange", (phase: GameState["phase"], dayCount: number, timer: number) => {

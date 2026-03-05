@@ -8,7 +8,7 @@ export type RoleName = "MAFYA" | "DOKTOR" | "DEDEKTIF" | "VATANDAS"
 
 export type Team = "town" | "mafia"
 
-export type ChatChannel = "PUBLIC" | "MAFIA" | "SYSTEM"
+export type ChatChannel = "PUBLIC" | "MAFIA" | "SYSTEM" | "DEAD"
 
 export type WinnerTeam = "town" | "mafia" | "draw"
 

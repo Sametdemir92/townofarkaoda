@@ -40,10 +40,10 @@ export function OyuncuKarti({
       className={`
         relative w-full text-left rounded-lg p-3 transition-all duration-200
         ${!player.isAlive ? "opacity-50 cursor-default" : ""}
-        ${selectable && !isMe && player.isAlive ? "hover:bg-gray-700/50 cursor-pointer" : "cursor-default"}
-        ${isSelected ? "ring-2 ring-red-500 bg-red-500/10" : "bg-gray-800/50"}
-        ${isMe ? "border border-blue-500/30" : "border border-transparent"}
-        ${isVotedByMe ? "ring-2 ring-yellow-500 bg-yellow-500/10" : ""}
+        ${selectable && !isMe && player.isAlive ? "hover:bg-gray-100 dark:hover:bg-gray-700/50 cursor-pointer" : "cursor-default"}
+        ${isSelected ? "ring-2 ring-red-500 bg-red-50 dark:bg-red-500/10" : "bg-white/80 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800/80 shadow-sm"}
+        ${isMe ? "border border-blue-500/30" : "border border-gray-100 dark:border-transparent"}
+        ${isVotedByMe ? "ring-2 ring-yellow-500 bg-yellow-50 dark:bg-yellow-500/10" : ""}
       `}
     >
       <div className="flex items-center justify-between">
@@ -52,8 +52,8 @@ export function OyuncuKarti({
           <div className="relative">
             <div
               className={`w-11 h-11 rounded-full flex items-center justify-center text-lg overflow-hidden transition-all duration-300 border-2 ${player.isAlive
-                  ? "border-gray-600 bg-gray-700 shadow-[0_0_10px_rgba(255,255,255,0.1)]"
-                  : "border-red-800/80 bg-red-900/50 grayscale sepia shadow-[0_0_15px_rgba(220,38,38,0.4)]"
+                ? "border-gray-600 bg-gray-700 shadow-[0_0_10px_rgba(255,255,255,0.1)]"
+                : "border-red-800/80 bg-red-900/50 grayscale sepia shadow-[0_0_15px_rgba(220,38,38,0.4)]"
                 } ${isSelected ? "scale-110 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)]" : ""}`}
             >
               {player.role ? (
@@ -79,7 +79,7 @@ export function OyuncuKarti({
           {/* Isim ve Bilgi */}
           <div>
             <div className="flex items-center gap-2">
-              <span className={`font-medium ${player.isAlive ? "text-white" : "text-gray-500 line-through"}`}>
+              <span className={`font-medium ${player.isAlive ? "text-gray-900 dark:text-white" : "text-gray-500 line-through"}`}>
                 {player.username}
               </span>
               {isMe && (
@@ -91,9 +91,9 @@ export function OyuncuKarti({
                 <Bot className="h-3.5 w-3.5 text-purple-400" />
               )}
             </div>
-            {/* Rol goster (olu ise) */}
-            {!player.isAlive && roleInfo && (
-              <span className={`text-xs ${roleInfo.team === "mafia" ? "text-red-400" : "text-blue-400"}`}>
+            {/* Rol goster (rolu biliniyorsa) */}
+            {roleInfo && (
+              <span className={`text-xs ${roleInfo.team === "mafia" ? "text-red-500 dark:text-red-400" : "text-blue-600 dark:text-blue-400"}`}>
                 {roleInfo.displayName}
               </span>
             )}

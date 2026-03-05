@@ -15,32 +15,32 @@ const phaseConfig: Record<
   lobby: {
     label: "Bekleme Odasi",
     icon: Sun,
-    color: "text-gray-400",
-    bg: "bg-gray-800",
+    color: "text-gray-600 dark:text-gray-400",
+    bg: "bg-gray-100 dark:bg-gray-800",
   },
   night: {
     label: "Gece",
     icon: Moon,
-    color: "text-indigo-400",
-    bg: "bg-indigo-900/30",
+    color: "text-indigo-600 dark:text-indigo-400",
+    bg: "bg-indigo-50 dark:bg-indigo-900/30",
   },
   day_discussion: {
     label: "Gunduz - Tartisma",
     icon: Sun,
-    color: "text-yellow-400",
-    bg: "bg-yellow-900/20",
+    color: "text-yellow-600 dark:text-yellow-400",
+    bg: "bg-yellow-50 dark:bg-yellow-900/20",
   },
   day_voting: {
     label: "Gunduz - Oylama",
     icon: Vote,
-    color: "text-orange-400",
-    bg: "bg-orange-900/20",
+    color: "text-orange-600 dark:text-orange-400",
+    bg: "bg-orange-50 dark:bg-orange-900/20",
   },
   ended: {
     label: "Oyun Bitti",
     icon: Trophy,
-    color: "text-yellow-400",
-    bg: "bg-yellow-900/20",
+    color: "text-yellow-600 dark:text-yellow-400",
+    bg: "bg-yellow-50 dark:bg-yellow-900/20",
   },
 }
 
@@ -56,7 +56,7 @@ export function FazGostergesi({ phase, dayCount }: FazGostergesiProps) {
       <div>
         <span className={`font-semibold ${config.color}`}>{config.label}</span>
         {dayCount > 0 && phase !== "ended" && (
-          <span className="text-gray-500 text-sm ml-2">
+          <span className="text-gray-500 dark:text-gray-400 text-sm ml-2">
             Gun {dayCount}
           </span>
         )}

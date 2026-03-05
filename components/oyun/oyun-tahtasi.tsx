@@ -203,7 +203,7 @@ export function OyunTahtasi({ roomId, roomCode, currentUserId }: OyunTahtasiProp
   const handleSendMessage = useCallback(
     (message: string, channel: ChatChannel) => {
       if (channel === "SYSTEM") return // Sistem mesajlari gonderilemez
-      socket.emit("chat:send", { message, channel: channel as "PUBLIC" | "MAFIA" })
+      socket.emit("chat:send", { message, channel })
     },
     [socket]
   )
@@ -242,13 +242,13 @@ export function OyunTahtasi({ roomId, roomCode, currentUserId }: OyunTahtasiProp
           : ""
 
   return (
-    <div className={`min-h-screen transition-all duration-1000 ${phaseClass} ${!phaseClass ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" : ""}`}>
+    <div className={`min-h-screen transition-all duration-1000 ${phaseClass} ${!phaseClass ? "bg-gradient-to-br from-gray-100 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900" : ""}`}>
       {/* Header */}
-      <header className="border-b border-gray-700/50 backdrop-blur-sm bg-black/20 p-3">
+      <header className="border-b border-gray-200 dark:border-gray-700/50 backdrop-blur-sm bg-white/50 dark:bg-black/20 p-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Swords className="h-5 w-5 text-red-500" />
-            <span className="font-bold text-white">Town of Arkaoda</span>
+            <Swords className="h-5 w-5 text-red-600 dark:text-red-500" />
+            <span className="font-bold text-gray-900 dark:text-white">Town of Arkaoda</span>
             <Badge variant="outline" className="text-gray-300">
               {roomCode}
             </Badge>
@@ -350,10 +350,10 @@ export function OyunTahtasi({ roomId, roomCode, currentUserId }: OyunTahtasiProp
 
             {/* Tartisma fazinda bilgi */}
             {gameState.phase === "day_discussion" && (
-              <Card className="bg-yellow-900/10 border-yellow-500/30">
+              <Card className="bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-500/30 shadow-sm">
                 <CardContent className="p-4 text-center">
-                  <p className="text-yellow-300">Tartisma zamani! Suphelilerini paylat.</p>
-                  <p className="text-sm text-gray-400 mt-1">
+                  <p className="text-yellow-700 dark:text-yellow-300">Tartisma zamani! Suphelilerini paylas.</p>
+                  <p className="text-sm text-yellow-600/80 dark:text-gray-400 mt-1">
                     Oylama sure bitiminde baslayacak.
                   </p>
                 </CardContent>
@@ -362,7 +362,7 @@ export function OyunTahtasi({ roomId, roomCode, currentUserId }: OyunTahtasiProp
 
             {/* Gece - canli degilse */}
             {gameState.phase === "night" && !isAlive && (
-              <Card className="bg-gray-800/50 border-gray-700">
+              <Card className="bg-white/80 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700">
                 <CardContent className="p-4 text-center text-gray-500">
                   Elendin. Oyunu izliyorsun...
                 </CardContent>

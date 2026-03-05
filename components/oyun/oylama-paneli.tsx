@@ -35,14 +35,14 @@ export function OylamaPaneli({
       .map((v) => players.find((p) => p.id === v.voterId)?.username || "?")
 
   return (
-    <Card className="bg-orange-900/10 border-orange-500/30">
+    <Card className="bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-500/30">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between text-orange-300">
+        <CardTitle className="flex items-center justify-between text-orange-700 dark:text-orange-300">
           <span className="flex items-center gap-2">
             <VoteIcon className="h-5 w-5" />
             Oylama
           </span>
-          <Badge variant="outline" className="text-gray-300">
+          <Badge variant="outline" className="text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600">
             {votes.length}/{aliveCount} oy
           </Badge>
         </CardTitle>
@@ -64,18 +64,17 @@ export function OylamaPaneli({
                 <button
                   key={player.id}
                   onClick={() => onVote(isMyVote ? null : player.id)}
-                  className={`w-full flex items-center justify-between rounded-lg p-3 transition-all ${
-                    isMyVote
-                      ? "bg-orange-600/30 ring-2 ring-orange-500"
-                      : "bg-gray-700/30 hover:bg-gray-700/50"
-                  }`}
+                  className={`w-full flex items-center justify-between rounded-lg p-3 transition-all border ${isMyVote
+                    ? "bg-orange-100 dark:bg-orange-600/30 ring-2 ring-orange-500 border-transparent text-gray-900 dark:text-white"
+                    : "bg-white/80 dark:bg-gray-700/30 hover:bg-white dark:hover:bg-gray-700/50 border-gray-100 dark:border-transparent text-gray-900 dark:text-white"
+                    }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-white font-medium">
+                    <span className="font-medium">
                       {player.username}
                     </span>
                     {isMyVote && (
-                      <CheckCircle className="h-4 w-4 text-orange-400" />
+                      <CheckCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                     )}
                   </div>
                   <div className="flex items-center gap-2">
@@ -84,12 +83,12 @@ export function OylamaPaneli({
                         <Badge variant="destructive" className="text-xs">
                           {voteCount} oy
                         </Badge>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 line-clamp-1 max-w-[80px]">
                           ({voters.join(", ")})
                         </span>
                       </div>
                     )}
-                    <Target className="h-4 w-4 text-gray-500" />
+                    <Target className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                   </div>
                 </button>
               )
@@ -98,14 +97,13 @@ export function OylamaPaneli({
             {/* Oy kullanmama secenegi */}
             <button
               onClick={() => onVote(null)}
-              className={`w-full flex items-center justify-center gap-2 rounded-lg p-3 transition-all ${
-                myVote === null && votes.some((v) => v.voterId === myPlayerId)
-                  ? "bg-gray-600/30 ring-2 ring-gray-500"
-                  : "bg-gray-700/20 hover:bg-gray-700/30"
-              }`}
+              className={`w-full flex items-center justify-center gap-2 rounded-lg p-3 transition-all border outline-none ${myVote === null && votes.some((v) => v.voterId === myPlayerId)
+                ? "bg-gray-200 dark:bg-gray-600/30 ring-2 ring-gray-500 border-transparent"
+                : "bg-gray-100 dark:bg-gray-700/20 hover:bg-gray-200 dark:hover:bg-gray-700/30 border-gray-200 dark:border-transparent"
+                }`}
             >
               <Ban className="h-4 w-4 text-gray-500" />
-              <span className="text-gray-400 text-sm">Kimseyi Eleme</span>
+              <span className="text-gray-600 dark:text-gray-400 text-sm font-medium">Kimseyi Eleme</span>
             </button>
           </>
         )}

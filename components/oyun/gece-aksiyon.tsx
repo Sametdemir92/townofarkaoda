@@ -45,33 +45,33 @@ export function GeceAksiyon({
     : validTargets
 
   return (
-    <Card className="bg-indigo-900/20 border-indigo-500/30">
+    <Card className="bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-500/30">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-indigo-300">
+        <CardTitle className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300">
           <Moon className="h-5 w-5" />
           Gece Aksiyonu
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Rol Bilgisi */}
-        <div className="flex items-center gap-3 bg-gray-800/50 rounded-lg p-3">
+        <div className="flex items-center gap-3 bg-white/50 dark:bg-gray-800/50 rounded-lg p-3 border border-indigo-100 dark:border-transparent">
           <span className="text-2xl">{roleInfo.emoji}</span>
           <div>
-            <div className="font-semibold text-white">{roleInfo.displayName}</div>
-            <div className="text-sm text-gray-400">{roleInfo.nightAbility || "Ozel yetenegin yok"}</div>
+            <div className="font-semibold text-gray-900 dark:text-white">{roleInfo.displayName}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{roleInfo.nightAbility || "Ozel yetenegin yok"}</div>
           </div>
         </div>
 
         {/* Gece Sonucu (Dedektif) */}
         {nightResult && (
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-blue-300 text-sm">
+          <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg p-3 text-blue-800 dark:text-blue-300 text-sm">
             {nightResult}
           </div>
         )}
 
         {/* Vatandas */}
         {isVatandas && (
-          <div className="text-center text-gray-500 py-4">
+          <div className="text-center text-gray-600 dark:text-gray-500 py-4">
             Gece yapabilcegin bir aksiyon yok. Sabahi bekle...
           </div>
         )}
@@ -79,7 +79,7 @@ export function GeceAksiyon({
         {/* Aksiyonu olan roller */}
         {!isVatandas && !hasSubmitted && (
           <div className="space-y-2">
-            <div className="text-sm text-gray-400 mb-2">
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
               {myRole === "MAFYA" && "Kimi oldureceginizi secin:"}
               {myRole === "DOKTOR" && "Kimi korumak istersin:"}
               {myRole === "DEDEKTIF" && "Kimi sorusturmak istersin:"}
@@ -88,21 +88,20 @@ export function GeceAksiyon({
               <button
                 key={player.id}
                 onClick={() => onSelectTarget(player.id)}
-                className={`w-full flex items-center justify-between rounded-lg p-3 transition-all ${
-                  selectedTarget === player.id
-                    ? "bg-indigo-600/30 ring-2 ring-indigo-500"
-                    : "bg-gray-700/30 hover:bg-gray-700/50"
-                }`}
+                className={`w-full flex items-center justify-between rounded-lg p-3 transition-all ${selectedTarget === player.id
+                    ? "bg-indigo-100 dark:bg-indigo-600/30 ring-2 ring-indigo-500"
+                    : "bg-white/80 dark:bg-gray-700/30 hover:bg-white dark:hover:bg-gray-700/50 border border-gray-100 dark:border-transparent"
+                  }`}
               >
-                <span className="text-white">{player.username}</span>
+                <span className="text-gray-900 dark:text-white font-medium">{player.username}</span>
                 {selectedTarget === player.id && (
-                  <Target className="h-4 w-4 text-indigo-400" />
+                  <Target className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                 )}
               </button>
             ))}
 
             <Button
-              className="w-full bg-indigo-600 hover:bg-indigo-700 mt-3"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 mt-3 text-white"
               onClick={onConfirm}
               disabled={!selectedTarget}
             >
@@ -114,7 +113,7 @@ export function GeceAksiyon({
 
         {/* Gonderildikten sonra */}
         {hasSubmitted && !isVatandas && (
-          <div className="flex items-center gap-2 text-green-400 justify-center py-4">
+          <div className="flex items-center gap-2 text-green-600 dark:text-green-400 justify-center py-4 font-medium">
             <CheckCircle className="h-5 w-5" />
             <span>Aksiyonun gonderildi. Sabahi bekliyorsun...</span>
           </div>

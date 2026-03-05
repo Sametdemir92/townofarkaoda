@@ -4,7 +4,7 @@
 
 import type { Server, Socket } from "socket.io"
 import type { SocketData, ClientToServerEvents, ServerToClientEvents } from "@/types/socket"
-import type { ChatMessage } from "@/types/game"
+import type { ChatMessage, ChatChannel } from "@/types/game"
 import { getGameEngine } from "@/server/game/engine"
 import { prisma } from "@/lib/prisma"
 import { nanoid } from "nanoid"
@@ -33,33 +33,42 @@ export function registerChatHandlers(io: TypedServer, socket: TypedSocket): void
 
       // Oyuncu hayatta mi kontrol et
       if (engine) {
-        if (!engine.isPlayerAlive(socketData.playerId)) {
-          socket.emit("error", { message: "Olu oyuncular mesaj gonderemez" })
-          return
-        }
+        const isAlive = engine.isPlayerAlive(socketData.playerId)
 
-        const state = engine.getState()
-
-        // Faz kontrolleri
-        if (state.phase === "night") {
-          // Gece sadece mafya kendi aralarinda konusabilir
-          if (channel !== "MAFIA") {
-            socket.emit("error", { message: "Gece sadece mafya chati kullanilabilir" })
+        if (!isAlive) {
+          if (channel !== "DEAD") {
+            socket.emit("error", { message: "Ölü oyuncular sadece Ölüler kanalında konuşabilir" })
+            return
+          }
+        } else {
+          if (channel === "DEAD") {
+            socket.emit("error", { message: "Hayattaki oyuncular Ölüler kanalını kullanamaz" })
             return
           }
 
-          const playerRole = engine.getPlayerRole(socketData.playerId)
-          if (playerRole !== "MAFYA") {
-            socket.emit("error", { message: "Sadece mafya uyeler gece konusabilir" })
-            return
-          }
-        }
+          const state = engine.getState()
 
-        if (state.phase === "day_discussion" || state.phase === "day_voting") {
-          // Gunduz herkes PUBLIC kanalda konusabilir
-          if (channel === "MAFIA") {
-            socket.emit("error", { message: "Gunduz mafya chati kullanilamaz" })
-            return
+          // Faz kontrolleri
+          if (state.phase === "night") {
+            // Gece sadece mafya kendi aralarinda konusabilir
+            if (channel !== "MAFIA") {
+              socket.emit("error", { message: "Gece sadece mafya chati kullanilabilir" })
+              return
+            }
+
+            const playerRole = engine.getPlayerRole(socketData.playerId)
+            if (playerRole !== "MAFYA") {
+              socket.emit("error", { message: "Sadece mafya uyeleri gece konusabilir" })
+              return
+            }
+          }
+
+          if (state.phase === "day_discussion" || state.phase === "day_voting") {
+            // Gunduz herkes PUBLIC kanalda konusabilir
+            if (channel === "MAFIA") {
+              socket.emit("error", { message: "Gunduz mafya chati kullanilamaz" })
+              return
+            }
           }
         }
       }
@@ -70,7 +79,7 @@ export function registerChatHandlers(io: TypedServer, socket: TypedSocket): void
         playerId: socketData.playerId,
         username: socketData.username,
         content: trimmed,
-        channel,
+        channel: channel as ChatChannel,
         timestamp: Date.now(),
       }
 
@@ -94,6 +103,20 @@ export function registerChatHandlers(io: TypedServer, socket: TypedSocket): void
           for (const s of sockets) {
             const sd = s.data as SocketData
             if (sd.playerId && mafiaPlayers.some((p) => p.id === sd.playerId)) {
+              s.emit("chat:message", chatMessage)
+            }
+          }
+        }
+      } else if (channel === "DEAD") {
+        // Sadece olu oyunculara gonder
+        if (engine) {
+          const state = engine.getState()
+          const deadPlayers = state.players.filter(p => !p.isAlive)
+          const sockets = await io.in(socketData.roomId).fetchSockets()
+
+          for (const s of sockets) {
+            const sd = s.data as SocketData
+            if (sd.playerId && deadPlayers.some((p) => p.id === sd.playerId)) {
               s.emit("chat:message", chatMessage)
             }
           }

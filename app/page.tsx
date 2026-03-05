@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Plus, LogIn, LogOut, Swords, List } from "lucide-react"
+import { ModeToggle } from "@/components/theme-toggle"
 
 interface Room {
   id: string
@@ -117,19 +118,20 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col transition-colors">
       {/* Header */}
-      <header className="border-b border-gray-700 p-4">
+      <header className="border-b border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-transparent backdrop-blur-sm p-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Swords className="h-6 w-6 text-red-500" />
-            <h1 className="text-xl font-bold text-white">Town of Arkaoda</h1>
+            <Swords className="h-6 w-6 text-red-600 dark:text-red-500" />
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Town of Arkaoda</h1>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-400">
-              Hosgeldin, <span className="text-white font-medium">{(session?.user as any)?.username || session?.user?.name}</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Hosgeldin, <span className="text-gray-900 dark:text-white font-medium">{(session?.user as any)?.username || session?.user?.name}</span>
             </span>
-            <Button variant="ghost" size="sm" onClick={() => signOut({ callbackUrl: "/auth/giris" })}>
+            <ModeToggle />
+            <Button variant="ghost" size="sm" onClick={() => signOut({ callbackUrl: "/auth/giris" })} className="text-gray-600 dark:text-gray-300">
               <LogOut className="h-4 w-4 mr-1" />
               Cikis
             </Button>
@@ -142,10 +144,10 @@ export default function HomePage() {
         <div className="max-w-4xl w-full space-y-6">
           {/* Title */}
           <div className="text-center space-y-2">
-            <h2 className="text-4xl font-bold text-white">
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white">
               Town of Arkaoda
             </h2>
-            <p className="text-gray-400 text-lg">
+            <p className="text-gray-600 dark:text-gray-400 text-lg">
               Kasabada bir katil var... Onu bulabilecek misin?
             </p>
           </div>
@@ -153,10 +155,10 @@ export default function HomePage() {
           {/* Actions */}
           <div className="grid md:grid-cols-2 gap-4">
             {/* Oda Olustur */}
-            <Card className="bg-gray-800/50 border-gray-700 hover:border-blue-500/50 transition-colors">
+            <Card className="bg-white/80 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:border-blue-500/50 transition-colors">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Plus className="h-5 w-5 text-blue-400" />
+                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                  <Plus className="h-5 w-5 text-blue-500 dark:text-blue-400" />
                   Oda Olustur
                 </CardTitle>
                 <CardDescription>
@@ -165,7 +167,7 @@ export default function HomePage() {
               </CardHeader>
               <CardContent>
                 <Button
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                   onClick={handleCreateRoom}
                   disabled={isCreating}
                 >
@@ -175,10 +177,10 @@ export default function HomePage() {
             </Card>
 
             {/* Odaya Katil */}
-            <Card className="bg-gray-800/50 border-gray-700 hover:border-green-500/50 transition-colors">
+            <Card className="bg-white/80 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:border-green-500/50 transition-colors">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <LogIn className="h-5 w-5 text-green-400" />
+                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                  <LogIn className="h-5 w-5 text-green-500 dark:text-green-400" />
                   Odaya Katil
                 </CardTitle>
                 <CardDescription>
@@ -192,10 +194,10 @@ export default function HomePage() {
                   onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                   onKeyDown={(e) => e.key === "Enter" && handleJoinRoom()}
                   maxLength={6}
-                  className="bg-gray-700/50 border-gray-600 text-white uppercase tracking-widest text-center text-lg"
+                  className="bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white uppercase tracking-widest text-center text-lg"
                 />
                 <Button
-                  className="w-full bg-green-600 hover:bg-green-700"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
                   onClick={() => handleJoinRoom()}
                   disabled={isJoining || !roomCode.trim()}
                 >
@@ -207,16 +209,16 @@ export default function HomePage() {
 
           {/* Error */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-center text-red-400 text-sm animate-fade-in">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-center text-red-600 dark:text-red-400 text-sm animate-fade-in">
               {error}
             </div>
           )}
 
           {/* Acik Odalar Listesi */}
-          <Card className="bg-gray-800/50 border-gray-700">
+          <Card className="bg-white/80 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <List className="h-5 w-5 text-yellow-400" />
+              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                <List className="h-5 w-5 text-yellow-500 dark:text-yellow-400" />
                 Acik Odalar
               </CardTitle>
               <CardDescription>
@@ -225,11 +227,11 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               {isLoadingRooms ? (
-                <div className="text-center text-gray-400 py-4 animate-pulse">
+                <div className="text-center text-gray-500 dark:text-gray-400 py-4 animate-pulse">
                   Odalar yukleniyor...
                 </div>
               ) : openRooms.length === 0 ? (
-                <div className="text-center text-gray-500 py-4 bg-gray-900/50 rounded-lg border border-gray-700">
+                <div className="text-center text-gray-600 dark:text-gray-500 py-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
                   <p>Su an acik bir oda bulunmuyor.</p>
                   <p className="text-sm mt-1">Hemen yeni bir oda olusturabilirsin!</p>
                 </div>
@@ -238,19 +240,19 @@ export default function HomePage() {
                   {openRooms.map((room) => (
                     <div
                       key={room.id}
-                      className="bg-gray-700/40 hover:bg-gray-700/60 transition-colors border border-gray-600 rounded-lg p-3 flex flex-col justify-between"
+                      className="bg-gray-50 dark:bg-gray-700/40 hover:bg-gray-100 dark:hover:bg-gray-700/60 transition-colors border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex flex-col justify-between"
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div className="space-y-1">
-                          <span className="inline-block px-2 py-1 bg-gray-900 rounded text-xs font-mono text-white tracking-widest">
+                          <span className="inline-block px-2 py-1 bg-gray-200 dark:bg-gray-900 rounded text-xs font-mono text-gray-800 dark:text-white tracking-widest">
                             {room.code}
                           </span>
-                          <div className="text-xs text-gray-400 flex items-center gap-1">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                             <Users className="h-3 w-3" />
                             {room.playerCount} / {room.maxPlayers} Oyuncu
                           </div>
                         </div>
-                        <div className="text-[10px] text-gray-500">
+                        <div className="text-[10px] text-gray-400 dark:text-gray-500">
                           {new Date(room.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </div>
@@ -258,7 +260,7 @@ export default function HomePage() {
                       <Button
                         size="sm"
                         variant="default"
-                        className="w-full mt-2 bg-green-600 hover:bg-green-700 text-xs"
+                        className="w-full mt-2 bg-green-600 hover:bg-green-700 text-xs text-white"
                         onClick={() => handleJoinRoom(room.code)}
                         disabled={isJoining || room.playerCount >= room.maxPlayers}
                       >
@@ -272,9 +274,9 @@ export default function HomePage() {
           </Card>
 
           {/* Roller Bilgi */}
-          <Card className="bg-gray-800/30 border-gray-700">
+          <Card className="bg-white/60 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700">
             <CardHeader>
-              <CardTitle className="text-white text-lg flex items-center gap-2">
+              <CardTitle className="text-gray-900 dark:text-white text-lg flex items-center gap-2">
                 <Users className="h-5 w-5" />
                 Roller
               </CardTitle>
@@ -282,18 +284,18 @@ export default function HomePage() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { name: "Mafya", emoji: "🔪", desc: "Geceleri oldurur", color: "text-red-400" },
-                  { name: "Doktor", emoji: "💊", desc: "Geceleri korur", color: "text-green-400" },
-                  { name: "Dedektif", emoji: "🔍", desc: "Geceleri sorusturur", color: "text-blue-400" },
-                  { name: "Vatandas", emoji: "👤", desc: "Oylama gucu", color: "text-gray-400" },
+                  { name: "Mafya", emoji: "🔪", desc: "Geceleri oldurur", color: "text-red-500 dark:text-red-400" },
+                  { name: "Doktor", emoji: "💊", desc: "Geceleri korur", color: "text-green-500 dark:text-green-400" },
+                  { name: "Dedektif", emoji: "🔍", desc: "Geceleri sorusturur", color: "text-blue-500 dark:text-blue-400" },
+                  { name: "Vatandas", emoji: "👤", desc: "Oylama gucu", color: "text-gray-500 dark:text-gray-400" },
                 ].map((role) => (
                   <div
                     key={role.name}
-                    className="bg-gray-700/30 rounded-lg p-3 text-center space-y-1"
+                    className="bg-white/50 dark:bg-gray-700/30 rounded-lg p-3 text-center space-y-1 shadow-sm border border-gray-100 dark:border-transparent"
                   >
                     <div className="text-2xl">{role.emoji}</div>
                     <div className={`font-medium ${role.color}`}>{role.name}</div>
-                    <div className="text-xs text-gray-500">{role.desc}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{role.desc}</div>
                   </div>
                 ))}
               </div>

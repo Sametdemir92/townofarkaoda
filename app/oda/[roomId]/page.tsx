@@ -163,20 +163,20 @@ export default function OdaPage() {
 
   if (sessionStatus === "loading") {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <div className="animate-pulse text-lg text-gray-400">Yukleniyor...</div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
+        <div className="animate-pulse text-lg text-gray-600 dark:text-gray-400">Yukleniyor...</div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
         <div className="text-center space-y-4">
-          <div className="text-red-400 text-lg">{error}</div>
+          <div className="text-red-500 dark:text-red-400 text-lg">{error}</div>
           <button
             onClick={() => router.push("/")}
-            className="text-blue-400 hover:underline"
+            className="text-blue-500 dark:text-blue-400 hover:underline"
           >
             Ana sayfaya don
           </button>
@@ -187,8 +187,8 @@ export default function OdaPage() {
 
   if (!roomData) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <div className="animate-pulse text-lg text-gray-400">Oda yukleniyor...</div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
+        <div className="animate-pulse text-lg text-gray-600 dark:text-gray-400">Oda yukleniyor...</div>
       </div>
     )
   }

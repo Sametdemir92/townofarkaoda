@@ -10,17 +10,21 @@ export const metadata: Metadata = {
   description: "Town of Salem benzeri, tarayici tabanli, online multiplayer sosyal cikarim oyunu.",
 }
 
+import { ThemeProvider } from "@/components/theme-provider"
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <html lang="tr" className="dark">
+    <html lang="tr" suppressHydrationWarning>
       <body className={inter.className}>
-        <Providers>
-          <main className="min-h-screen">{children}</main>
-        </Providers>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Providers>
+            <main className="min-h-screen">{children}</main>
+          </Providers>
+        </ThemeProvider>
       </body>
     </html>
   )

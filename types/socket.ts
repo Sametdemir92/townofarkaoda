@@ -21,7 +21,7 @@ export interface ClientToServerEvents {
   "game:vote": (data: { targetId: string | null }) => void
 
   // Chat olaylari
-  "chat:send": (data: { message: string; channel: "PUBLIC" | "MAFIA" }) => void
+  "chat:send": (data: { message: string; channel: "PUBLIC" | "MAFIA" | "DEAD" }) => void
 }
 
 // ---- Server -> Client Events ----

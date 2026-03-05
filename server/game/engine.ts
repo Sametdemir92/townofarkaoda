@@ -328,9 +328,19 @@ export class GameEngine {
         this.state.nightActions.find((a) => a.playerId === playerId)?.targetId === p.id
       )
       if (target) {
-        const message = result === "supheli"
+        let message = result === "supheli"
           ? `${target.username} supheli gorunuyor! (Mafya)`
           : `${target.username} masum gorunuyor.`
+
+        // Eger hedeflenen kisi o gece olmusse, dedektif cinayet anina sahit olur ve mafyayi tanir!
+        if (resolution.killedPlayerId === target.id) {
+          const mafias = this.state.players
+            .filter((p) => p.role === "MAFYA")
+            .map((p) => p.username)
+            .join(", ")
+          message = `${target.username} bu gece gözlerinin önünde öldürüldü! Cinayete şahit oldun ve Mafya'yı gördün: ${mafias}`
+        }
+
         this.onNightResult?.(playerId, message)
       }
     })

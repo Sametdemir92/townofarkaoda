@@ -18,25 +18,23 @@ export function Timer({ seconds, phase }: TimerProps) {
 
   return (
     <div className="flex items-center gap-3">
-      <Clock className={`h-5 w-5 ${isCritical ? "text-red-500 animate-pulse" : "text-gray-400"}`} />
+      <Clock className={`h-5 w-5 ${isCritical ? "text-red-500 animate-pulse" : "text-gray-500 dark:text-gray-400"}`} />
       <div className="flex-1">
-        <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all duration-1000 ${
-              isCritical
+            className={`h-full rounded-full transition-all duration-1000 ${isCritical
                 ? "bg-red-500"
                 : percentage > 50
-                ? "bg-green-500"
-                : "bg-yellow-500"
-            }`}
+                  ? "bg-green-500"
+                  : "bg-yellow-500"
+              }`}
             style={{ width: `${percentage}%` }}
           />
         </div>
       </div>
       <span
-        className={`font-mono text-lg font-bold min-w-[50px] text-right ${
-          isCritical ? "text-red-500 timer-critical" : "text-white"
-        }`}
+        className={`font-mono text-lg font-bold min-w-[50px] text-right ${isCritical ? "text-red-500 timer-critical" : "text-gray-900 dark:text-white"
+          }`}
       >
         {formatTime(seconds)}
       </span>
