@@ -362,6 +362,11 @@ export function OyunTahtasi({ roomId, roomCode, currentUserId }: OyunTahtasiProp
             {gameState.phase === "day_discussion" && (
               <Card className="bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-500/30 shadow-sm">
                 <CardContent className="p-4 text-center">
+                  {nightResult && (
+                    <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg p-3 text-blue-800 dark:text-blue-300 text-sm mb-3 text-left">
+                      <span className="font-semibold">🔍 Gece Soruşturma Sonucu:</span> {nightResult}
+                    </div>
+                  )}
                   <p className="text-yellow-700 dark:text-yellow-300">Tartisma zamani! Suphelilerini paylas.</p>
                   <p className="text-sm text-yellow-600/80 dark:text-gray-400 mt-1">
                     Oylama sure bitiminde baslayacak.

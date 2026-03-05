@@ -281,7 +281,14 @@ function scheduleBotChat(
     bots = state.players.filter((p) => p.isAlive && p.isBot)
   }
 
-  for (const bot of bots) {
+  if (bots.length === 0) return
+
+  // Gunduz fazlarinda sadece 1 bot mesaj gondersin (mafia_night haric)
+  const selectedBots = context === "mafia_night"
+    ? bots
+    : [bots[Math.floor(Math.random() * bots.length)]]
+
+  for (const bot of selectedBots) {
     const delay = getBotChatDelay()
     setTimeout(async () => {
       const currentEngine = getGameEngine(roomId)
@@ -355,18 +362,15 @@ function setupEngineEvents(
       scheduleBotNightActions(currentEngine, io, roomId)
       scheduleBotChat(currentEngine, io, roomId, "mafia_night")
     } else if (phase === "day_discussion") {
+      // Sabah olunca sadece 1 bot mesaj gonderir
       scheduleBotChat(currentEngine, io, roomId, "day_start")
-      // Biraz sonra suclama mesajlari
-      setTimeout(() => {
-        const eng = getGameEngine(roomId)
-        if (eng && eng.getState().phase === "day_discussion") {
-          scheduleBotChat(eng, io, roomId, "accuse")
-        }
-      }, 8000)
     } else if (phase === "day_voting") {
       scheduleBotVotes(currentEngine, io, roomId)
     }
   })
+
+  // after_death bot chati icin debounce - ayni turda birden fazla olum olursa sadece 1 bot mesaj gondersin
+  let afterDeathScheduled = false
 
   engine.onEvent("playerEliminated", (playerId: string, username: string, role: RoleName, reason: string) => {
     io.to(roomId).emit("game:player-eliminated", { playerId, username, role, reason })
@@ -379,15 +383,19 @@ function setupEngineEvents(
       }).catch(console.error)
     }
 
-    // Olum sonrasi bot chatleri
-    const eng = getGameEngine(roomId)
-    if (eng) {
-      setTimeout(() => {
-        const currentEng = getGameEngine(roomId)
-        if (currentEng && currentEng.getState().phase.startsWith("day")) {
-          scheduleBotChat(currentEng, io, roomId, "after_death")
-        }
-      }, 2000)
+    // Olum sonrasi sadece 1 kez bot chat mesaji
+    if (!afterDeathScheduled) {
+      afterDeathScheduled = true
+      const eng = getGameEngine(roomId)
+      if (eng) {
+        setTimeout(() => {
+          afterDeathScheduled = false
+          const currentEng = getGameEngine(roomId)
+          if (currentEng && currentEng.getState().phase.startsWith("day")) {
+            scheduleBotChat(currentEng, io, roomId, "after_death")
+          }
+        }, 2000)
+      }
     }
   })
 

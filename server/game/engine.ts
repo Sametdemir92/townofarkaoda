@@ -351,18 +351,13 @@ export class GameEngine {
       if (target && investigator) {
         let message = ""
 
-        if (investigator.role === "AJAN") {
-          // Ajan hedefin tam rolunu ogrenir
+        if (investigator.role === "AJAN" || investigator.role === "DEDEKTIF") {
+          // Ajan ve Dedektif hedefin tam rolunu ogrenir
           const roleDef = ROLE_DEFINITIONS[target.role as RoleName]
-          message = `${target.username} adlı kişinin rolü: ${roleDef?.displayName || target.role}${roleDef?.team === "mafia" ? " (Bizden biri!)" : " (Kasabalı)"}`
-        } else {
-          // Dedektif: supheli/masum
-          message = result === "supheli"
-            ? `${target.username} supheli gorunuyor! (Mafya)`
-            : `${target.username} masum gorunuyor.`
+          message = `${target.username} adlı kişinin rolü: ${roleDef?.displayName || target.role}${roleDef?.team === "mafia" ? " (Mafya Takımı)" : " (Kasabalı)"}`
 
           // Eger hedeflenen kisi o gece olmusse, dedektif cinayet anina sahit olur
-          if (resolution.killedPlayerId === target.id) {
+          if (investigator.role === "DEDEKTIF" && resolution.killedPlayerId === target.id) {
             const mafias = this.state.players
               .filter((p) => p.role === "MAFYA" || p.role === "AJAN")
               .map((p) => p.username)
@@ -371,7 +366,7 @@ export class GameEngine {
             if (resolution.additionalKills.includes(playerId)) {
               message = `${target.username}'in öldürülme anına denk geldin! Mafya seni de fark etti: ${mafias}. Son nefesinle bu bilgiyi yanına aldın...`
             } else {
-              message = `${target.username} bu gece gözlerinin önünde öldürüldü! Cinayete şahit oldun ve Mafya'yı gördün: ${mafias}`
+              message = `${target.username} bu gece gözlerinin önünde öldürüldü! Cinayete şahit oldun ve Mafya'yı gördün: ${mafias}; Ölenin rolü: ${roleDef?.displayName}`
             }
           }
         }

@@ -5,7 +5,7 @@
 import type { Player, RoleName, NightAction, Vote } from "@/types/game"
 
 const ZHIPU_API_KEY = "9e3419e202d64ab68d0b36a29e0b630c.CiRfrF4TyuTLOnjj"
-const ZHIPU_API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
+const ZHIPU_API_URL = "https://api.z.ai/api/paas/v4/chat/completions"
 
 // ---- Rastgele Secim Yardimcilari ----
 
@@ -202,6 +202,23 @@ const BOT_DAY_MESSAGES: Record<string, string[]> = {
     "Bu gece daha dikkatli olmaliyiz.",
     "Mafya guclu, birlikte olmaliyiz.",
   ],
+  chatReply: [
+    "Katiliyorum, bu gece dikkatli olmamiz lazim.",
+    "Hmm ilginc, bence de supheli bir durum var.",
+    "Ben farkli dusunuyorum ama seni dinliyorum.",
+    "Sana katilmiyorum, bence yanlis yere bakiyorsun.",
+    "Onemli bir nokta, bunu dusunmemiz lazim.",
+    "Evet {author} hakli olabilir, dikkat edelim.",
+    "Sakin olalim, acele karar vermeyelim.",
+    "Sen ne biliyorsun ki, acikla biraz.",
+    "Bence de {author} bir seyler biliyor.",
+    "Herkesi dinleyelim once, sonra karar verelim.",
+    "Bu bilgi onemli, tesekkurler.",
+    "Ciddiye almamiz gereken bir sey bu.",
+    "Emin misin? Bana biraz supheli geldi.",
+    "Dogru soyluyor olabilir, ama emin degilim.",
+    "Tamam anladim, peki baska bir fikri olan var mi?",
+  ],
 }
 
 const BOT_MAFIA_MESSAGES = [
@@ -218,14 +235,20 @@ const BOT_MAFIA_MESSAGES = [
 export async function generateBotMessage(
   bot: Player,
   allPlayers: Player[],
-  channel: "PUBLIC" | "MAFIA",
-  context: "day_start" | "accuse" | "defend" | "after_death" | "mafia_night"
+  channel: "PUBLIC" | "MAFIA" | "DEAD",
+  context: "day_start" | "accuse" | "defend" | "after_death" | "mafia_night" | "chat_reply",
+  lastMessageContent?: string,
+  lastMessageAuthor?: string
 ): Promise<string | null> {
-  // Her zaman mesaj gonderme - %40 ihtimal
-  if (Math.random() > 0.4) return null
+  // Her zaman mesaj gonderme - eğer context reply ise biraz daha yüksek ihtimal
+  const chance = context === "chat_reply" ? 0.95 : 0.9;
+  if (Math.random() > chance) return null;
+  
+  console.log(`[Bot AI] Bot ${bot.username} mesaj generate ediyor, context: ${context}, channel: ${channel}`);
 
-  // Eger GEMINI_API_KEY yoksa veya bir sorun çıkarsa kullanilacak yedek kod
+  // Eger ZHIPU_API_KEY yoksa veya bir sorun çıkarsa kullanilacak yedek kod
   const fallbackMessage = () => {
+    console.log(`[Bot AI] Bot ${bot.username} fallback mesaj kullanıyor`);
     if (channel === "MAFIA") {
       return randomPick(BOT_MAFIA_MESSAGES)
     }
@@ -238,6 +261,10 @@ export async function generateBotMessage(
       }
       case "defend": return randomPick(BOT_DAY_MESSAGES.defend)
       case "after_death": return randomPick(BOT_DAY_MESSAGES.afterDeath)
+      case "chat_reply": {
+        const replyMsg = randomPick(BOT_DAY_MESSAGES.chatReply)
+        return replyMsg.replace("{author}", lastMessageAuthor || "o")
+      }
       default: return randomPick(BOT_DAY_MESSAGES.general)
     }
   }
@@ -253,8 +280,9 @@ export async function generateBotMessage(
 Sen "Town of Salem" tarzı "Town of Arkaoda" oyununda oynayan "${bot.username}" adlı bir oyuncusun.
 Gerçek bir oyuncu gibi davranmalısın. AI olduğunu kesinlikle belli etme.
 Rolün: ${bot.role}.
-Kanal: ${channel} (${channel === "MAFIA" ? "Sadece diğer mafyalar seni duyuyor." : "Herkes duyuyor."})
-Durum Context'i: ${context} (day_start: Sabah rutini, accuse: Birini suçla, defend: Kendini savun, after_death: Biri öldükten sonra tepki ver, mafia_night: Gece mafya olarak kimi vuracağını tartış).
+Kanal: ${channel} (${channel === "MAFIA" ? "Sadece diğer mafyalar seni duyuyor." : channel === "DEAD" ? "Sadece ölüler ve medyum duyuyor." : "Herkes duyuyor."})
+Durum Context'i: ${context} (day_start: Sabah rutini, accuse: Birini suçla, defend: Kendini savun, after_death: Biri öldükten sonra tepki ver, mafia_night: Gece mafya olarak kimi vuracağını tartış, chat_reply: Başka bir oyuncunun söylediğine sohbet içinde yanıt ver).
+${context === "chat_reply" ? `Şu an "${lastMessageAuthor}" isimli oyuncu sana veya ortaya şunu yazdı: "${lastMessageContent}". Buna kısa ve doğal bir şekilde cevap ver.` : ""}
 Şu an hayatta olanlar: ${alivePlayers || "Yok"}. 
 Ölü olanlar: ${deadPlayers || "Yok"}.
 
@@ -267,34 +295,58 @@ Kurallar:
 Lütfen sadece chate yazılacak mesajı ver:
       `.trim()
 
-      const response = await fetch(ZHIPU_API_URL, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${ZHIPU_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "GLM-4.7-Flash",
-          messages: [{ role: "user", content: prompt }]
-        })
-      });
+      console.log(`[Bot AI] Zhipu API'ye istek gönderiliyor...`);
 
-      if (!response.ok) {
-        throw new Error(`Zhipu API hatasi: ${response.status} ${response.statusText}`);
+      const makeRequest = async (): Promise<string> => {
+        const response = await fetch(ZHIPU_API_URL, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${ZHIPU_API_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "glm-4.7-flash",
+            messages: [{ role: "user", content: prompt }]
+          })
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`Zhipu API hatasi: ${response.status} ${response.statusText} - ${errText}`);
+        }
+
+        const result = (await response.json()) as any;
+        return result?.choices?.[0]?.message?.content?.trim() || "";
+      };
+
+      let text = "";
+      try {
+        text = await makeRequest();
+      } catch (firstErr: any) {
+        // Rate limit ise 2 saniye bekleyip tekrar dene
+        if (firstErr.message?.includes("429") || firstErr.message?.includes("1302") || firstErr.message?.includes("1305")) {
+          console.log("[Bot AI] Rate limit, 2 saniye bekleyip tekrar deneniyor...");
+          await new Promise(r => setTimeout(r, 2000));
+          text = await makeRequest();
+        } else {
+          throw firstErr;
+        }
       }
-
-      const result = (await response.json()) as any;
-      const text = result?.choices?.[0]?.message?.content?.trim() || "";
 
       // Çift tırnak varsa temizle 
       const cleanText = text.replace(/^"|"$/g, '').trim()
 
       if (cleanText.length > 0) {
+        console.log(`[Bot AI] Zhipu API'den yanit alindi: ${cleanText}`);
         return cleanText
+      } else {
+        console.log(`[Bot AI] Zhipu API'den bos yanit alindi, fallback'e geçiliyor`);
       }
     } catch (error) {
       console.error("[Bot AI] Zhipu API hatası, fallback mesajına geçiliyor:", error)
     }
+  } else {
+    console.log("[Bot AI] ZHIPU_API_KEY bulunamadi, fallback kullaniliyor");
   }
 
   return fallbackMessage()

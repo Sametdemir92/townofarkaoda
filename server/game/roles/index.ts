@@ -52,24 +52,16 @@ export function assignRoles(players: Player[]): Player[] {
   // Oyuncu sayisina gore rastgele ekstra ozel rol ekleme
   const extraRolesPossible = count > 5 ? count - (mafyaCount + 2 + baskanCount) : 0
   if (extraRolesPossible > 0) {
-    // Rastgele olarak fazladan doktor atansin (%30 sans)
-    if (Math.random() < 0.3) {
-      doktorCount += 1
-    }
-    // Rastgele olarak fazladan dedektif atansin (%30 sans)
-    if (Math.random() < 0.3) {
-      dedektifCount += 1
-    }
     // Medyum atanma ihtimali (%40 sans)
     if (Math.random() < 0.4) {
       medyumCount = 1
     }
-    // Ajan atanma ihtimali (%35 sans - 7+ oyuncu)
-    if (count >= 7 && Math.random() < 0.35) {
+    // Ajan: 6+ oyuncuda her zaman atanir
+    if (count >= 6) {
       ajanCount = 1
     }
-    // Gardiyan atanma ihtimali (%35 sans - 7+ oyuncu)
-    if (count >= 7 && Math.random() < 0.35) {
+    // Gardiyan: 6+ oyuncuda her zaman atanir
+    if (count >= 6) {
       gardiyanCount = 1
     }
   }

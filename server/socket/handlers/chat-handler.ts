@@ -8,6 +8,7 @@ import type { ChatMessage, ChatChannel } from "@/types/game"
 import { getGameEngine } from "@/server/game/engine"
 import { prisma } from "@/lib/prisma"
 import { nanoid } from "nanoid"
+import { generateBotMessage, getBotChatDelay } from "@/server/game/bot-ai"
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents, {}, SocketData>
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents, {}, SocketData>
@@ -128,6 +129,67 @@ export function registerChatHandlers(io: TypedServer, socket: TypedSocket): void
       } else {
         // Herkese gonder
         io.to(socketData.roomId).emit("chat:message", chatMessage)
+
+        // Bot yanit mekanizmasi (Sadece PUBLIC chat)
+        // Botlar yalnızca isimleri geçtiğinde veya doğrudan hitap edildiğinde cevap verir
+        if (engine) {
+          const state = engine.getState();
+          // Sadece gunduz fazlarinda botlar cevap verebilir
+          if (state.phase.startsWith("day_")) {
+            const aliveBots = state.players.filter(p => p.isAlive && p.isBot);
+            if (aliveBots.length > 0) {
+              const lowerMessage = trimmed.toLowerCase();
+              // Mesajda adı geçen botları bul (Bot) ekini çıkararak karşılaştır
+              const mentionedBots = aliveBots.filter(b => {
+                const cleanName = b.username.replace(/\s*\(Bot\)\s*/i, "").toLowerCase();
+                return lowerMessage.includes(cleanName);
+              });
+
+              // Sadece ismi geçen bot(lar) cevap verebilir
+              if (mentionedBots.length > 0) {
+                const targetBot = mentionedBots[Math.floor(Math.random() * mentionedBots.length)];
+                const delay = getBotChatDelay();
+                
+                console.log(`[Bot Response] ${targetBot.username} ismi geçti, ${delay}ms sonra cevap verecek`);
+                
+                setTimeout(async () => {
+                  const currentEngine = getGameEngine(socketData.roomId!);
+                  if (!currentEngine) return;
+                  const currentState = currentEngine.getState();
+                  if (!currentState.phase.startsWith("day_")) return;
+                  
+                  const botStillAlive = currentState.players.find(p => p.id === targetBot.id && p.isAlive);
+                  if (!botStillAlive) return;
+
+                  try {
+                    const replyContent = await generateBotMessage(
+                      botStillAlive, 
+                      currentState.players, 
+                      "PUBLIC", 
+                      "chat_reply",
+                      trimmed,
+                      socketData.username
+                    );
+
+                    if (replyContent) {
+                      const botMsg: ChatMessage = {
+                        id: nanoid(),
+                        playerId: botStillAlive.id,
+                        username: botStillAlive.username,
+                        content: replyContent,
+                        channel: "PUBLIC",
+                        timestamp: Date.now(),
+                      };
+                      io.to(socketData.roomId!).emit("chat:message", botMsg);
+                    }
+                  } catch (error) {
+                    console.error(`[Bot Response] Hata:`, error);
+                  }
+                }, delay);
+              }
+            }
+          }
+        }
       }
     } catch (error) {
       console.error("chat:send hatasi:", error)
