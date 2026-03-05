@@ -258,7 +258,7 @@ function scheduleBotChat(
 
   for (const bot of bots) {
     const delay = getBotChatDelay()
-    setTimeout(() => {
+    setTimeout(async () => {
       const currentEngine = getGameEngine(roomId)
       if (!currentEngine) return
       const currentState = currentEngine.getState()
@@ -267,7 +267,7 @@ function scheduleBotChat(
       if (context === "mafia_night" && currentState.phase !== "night") return
       if (context !== "mafia_night" && !currentState.phase.startsWith("day")) return
 
-      const message = generateBotMessage(bot, currentState.players, channel, context)
+      const message = await generateBotMessage(bot, currentState.players, channel, context)
       if (message) {
         const chatMsg: ChatMessage = {
           id: nanoid(),
