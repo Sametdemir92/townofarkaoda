@@ -283,7 +283,7 @@ Lütfen sadece chate yazılacak mesajı ver:
         throw new Error(`Zhipu API hatasi: ${response.status} ${response.statusText}`);
       }
 
-      const result = await response.json();
+      const result = (await response.json()) as any;
       const text = result?.choices?.[0]?.message?.content?.trim() || "";
 
       // Çift tırnak varsa temizle 
