@@ -61,7 +61,7 @@ export function registerChatHandlers(io: TypedServer, socket: TypedSocket): void
               return
             }
 
-            if (channel === "MAFIA" && playerRole !== "MAFYA") {
+            if (channel === "MAFIA" && playerRole !== "MAFYA" && playerRole !== "AJAN") {
               socket.emit("error", { message: "Sadece mafya uyeleri mafya chatini kullanabilir" })
               return
             }

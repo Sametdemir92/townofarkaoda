@@ -4,7 +4,7 @@
 
 export type GamePhase = "lobby" | "night" | "day_discussion" | "day_voting" | "ended"
 
-export type RoleName = "MAFYA" | "DOKTOR" | "DEDEKTIF" | "VATANDAS" | "MEDYUM"
+export type RoleName = "MAFYA" | "DOKTOR" | "DEDEKTIF" | "VATANDAS" | "MEDYUM" | "BASKAN" | "AJAN" | "GARDIYAN"
 
 export type Team = "town" | "mafia"
 
@@ -62,6 +62,7 @@ export interface GameState {
   gameLog: GameLogEntry[]
   eliminatedTonight: string | null // gece oldurulen
   eliminatedToday: string | null   // gunduz oylanan
+  jailedPlayerId: string | null    // gardiyanin hapse attigi kisi
 }
 
 // ---- Mesajlar ----
@@ -129,6 +130,30 @@ export const ROLE_DEFINITIONS: Record<RoleName, RoleDefinition> = {
     description: "Ölülerin ruhlarıyla iletişim kurabilen kasabalı. Gündüz veya gece fark etmeksizin ölülerin sohbetini okuyabilir ve onlarla konuşabilir.",
     nightAbility: null,
     emoji: "🔮",
+  },
+  BASKAN: {
+    name: "BASKAN",
+    displayName: "Başkan",
+    team: "town",
+    description: "Kasabanın seçilmiş başkanı. Başkan öldüğü anda mafya otomatik olarak kazanır! Kasabalılar onu korumak zorunda.",
+    nightAbility: null,
+    emoji: "👑",
+  },
+  AJAN: {
+    name: "AJAN",
+    displayName: "Ajan",
+    team: "mafia",
+    description: "Mafya için çalışan gizli ajan. Geceleri bir kişiyi araştırarak rolünü öğrenir. Mafya takımının gözü kulağıdır.",
+    nightAbility: "Bir oyuncunun rolünü öğrenir",
+    emoji: "🕵️",
+  },
+  GARDIYAN: {
+    name: "GARDIYAN",
+    displayName: "Gardiyan",
+    team: "town",
+    description: "Kasabanın gardiyanı. Gündüz tartışması sırasında birini seçer, o kişi o gece hiçbir aksiyon yapamaz (hapse atar).",
+    nightAbility: null,
+    emoji: "🛡️",
   },
   VATANDAS: {
     name: "VATANDAS",

@@ -71,7 +71,18 @@ export function decideBotNightAction(
     }
 
     case "VATANDAS":
-      return null // Vatandasin gece aksiyonu yok
+    case "MEDYUM":
+    case "BASKAN":
+    case "GARDIYAN":
+      return null // Bu rollerin gece aksiyonu yok
+
+    case "AJAN": {
+      // Ajan: Rastgele birini arastir (kendi takimini haric tut)
+      const ajanTargets = aliveOthers.filter((p) => p.role !== "MAFYA" && p.role !== "AJAN")
+      if (ajanTargets.length > 0) return randomPick(ajanTargets).id
+      if (aliveOthers.length > 0) return randomPick(aliveOthers).id
+      return null
+    }
 
     default:
       return null
@@ -129,6 +140,9 @@ export function decideBotVote(
 
     case "DOKTOR":
     case "DEDEKTIF":
+    case "MEDYUM":
+    case "BASKAN":
+    case "GARDIYAN":
     case "VATANDAS": {
       // Kasaba: Rastgele birini sec
       // %50 ihtimalle mevcut en cok oy alan kisiye katil
@@ -237,7 +251,7 @@ export async function generateBotMessage(
   const genAI = getGenAIClient()
   if (genAI) {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
 
       // Oyuncuların güncel listesi
       const alivePlayers = allPlayers.filter(p => p.isAlive).map(p => p.username).join(", ")

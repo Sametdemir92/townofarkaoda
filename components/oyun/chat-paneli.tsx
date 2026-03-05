@@ -44,11 +44,11 @@ export function ChatPaneli({
   }
 
   const canChat = (isAlive && phase !== "lobby" && phase !== "ended") || (!isAlive && activeChannel === "DEAD") || (isAlive && myRole === "MEDYUM" && activeChannel === "DEAD")
-  const canUseMafiaChat = myRole === "MAFYA" && phase === "night" && activeChannel === "MAFIA"
+  const canUseMafiaChat = (myRole === "MAFYA" || myRole === "AJAN") && phase === "night" && activeChannel === "MAFIA"
   const canUsePublicChat = isAlive && phase !== "night" && activeChannel === "PUBLIC"
   const canUseDeadChat = (!isAlive && activeChannel === "DEAD") || (isAlive && myRole === "MEDYUM" && activeChannel === "DEAD")
 
-  const showMafiaTab = myRole === "MAFYA"
+  const showMafiaTab = myRole === "MAFYA" || myRole === "AJAN"
   const showDeadTab = !isAlive || myRole === "MEDYUM"
 
   // Seçili kanala göre mesaj gönderilebilir mi?

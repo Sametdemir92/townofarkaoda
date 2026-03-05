@@ -13,6 +13,7 @@ import type {
   WinnerTeam,
   PHASE_DURATIONS,
 } from "@/types/game"
+import { ROLE_DEFINITIONS } from "@/types/game"
 import { assignRoles } from "./roles"
 import { resolveNightActions, NightResolution } from "./phases/night-phase"
 import { resolveVotes, VoteResolution } from "./phases/day-phase"
@@ -77,6 +78,7 @@ export class GameEngine {
       gameLog: [],
       eliminatedTonight: null,
       eliminatedToday: null,
+      jailedPlayerId: null,
     }
   }
 
@@ -124,12 +126,21 @@ export class GameEngine {
   }
 
   getMafiaPlayers(): Player[] {
-    return this.state.players.filter((p) => p.role === "MAFYA" && p.isAlive)
+    return this.state.players.filter((p) => (p.role === "MAFYA" || p.role === "AJAN") && p.isAlive)
   }
 
   isPlayerAlive(playerId: string): boolean {
     const player = this.state.players.find((p) => p.id === playerId)
     return player?.isAlive ?? false
+  }
+
+  // Gardiyan'in gunduz secimi
+  setJailedPlayer(targetId: string): boolean {
+    if (this.state.phase !== "day_discussion") return false
+    const target = this.state.players.find((p) => p.id === targetId && p.isAlive)
+    if (!target) return false
+    this.state.jailedPlayerId = targetId
+    return true
   }
 
   // ---- Oyunu Baslat ----
@@ -258,7 +269,7 @@ export class GameEngine {
   }
 
   private allNightActionsReceived(): boolean {
-    const actionPlayers = this.getAlivePlayers().filter((p) => p.role !== "VATANDAS")
+    const actionPlayers = this.getAlivePlayers().filter((p) => p.role !== "VATANDAS" && p.role !== "MEDYUM" && p.role !== "BASKAN" && p.role !== "GARDIYAN")
     return actionPlayers.every((p) =>
       this.state.nightActions.some((a) => a.playerId === p.id)
     )
@@ -267,7 +278,16 @@ export class GameEngine {
   private resolveNight(): void {
     this.stopTimer()
 
-    const resolution = resolveNightActions(this.state.nightActions, this.state.players)
+    const resolution = resolveNightActions(this.state.nightActions, this.state.players, this.state.jailedPlayerId)
+
+    // Hapislenen oyuncuya bilgi ver
+    if (this.state.jailedPlayerId) {
+      const jailed = this.state.players.find((p) => p.id === this.state.jailedPlayerId)
+      if (jailed) {
+        this.addLog(`${jailed.username} bu gece gardiyan tarafından hapse atıldı ve hiçbir aksiyon yapamadı.`, "info")
+      }
+      this.state.jailedPlayerId = null // Sifirla
+    }
 
     // Oldurulen oyuncu
     if (resolution.killedPlayerId) {
@@ -322,28 +342,61 @@ export class GameEngine {
       }
     }
 
-    // Dedektif sonuclari - sadece dedektife gonder
+    // Sorusturma sonuclari - Dedektif ve Ajan
     resolution.investigations.forEach((result, playerId) => {
-      const target = this.state.players.find((p) =>
-        this.state.nightActions.find((a) => a.playerId === playerId)?.targetId === p.id
-      )
-      if (target) {
-        let message = result === "supheli"
-          ? `${target.username} supheli gorunuyor! (Mafya)`
-          : `${target.username} masum gorunuyor.`
+      const action = this.state.nightActions.find((a) => a.playerId === playerId)
+      const target = this.state.players.find((p) => p.id === action?.targetId)
+      const investigator = this.state.players.find((p) => p.id === playerId)
 
-        // Eger hedeflenen kisi o gece olmusse, dedektif cinayet anina sahit olur ve mafyayi tanir!
-        if (resolution.killedPlayerId === target.id) {
-          const mafias = this.state.players
-            .filter((p) => p.role === "MAFYA")
-            .map((p) => p.username)
-            .join(", ")
-          message = `${target.username} bu gece gözlerinin önünde öldürüldü! Cinayete şahit oldun ve Mafya'yı gördün: ${mafias}`
+      if (target && investigator) {
+        let message = ""
+
+        if (investigator.role === "AJAN") {
+          // Ajan hedefin tam rolunu ogrenir
+          const roleDef = ROLE_DEFINITIONS[target.role as RoleName]
+          message = `${target.username} adlı kişinin rolü: ${roleDef?.displayName || target.role}${roleDef?.team === "mafia" ? " (Bizden biri!)" : " (Kasabalı)"}`
+        } else {
+          // Dedektif: supheli/masum
+          message = result === "supheli"
+            ? `${target.username} supheli gorunuyor! (Mafya)`
+            : `${target.username} masum gorunuyor.`
+
+          // Eger hedeflenen kisi o gece olmusse, dedektif cinayet anina sahit olur
+          if (resolution.killedPlayerId === target.id) {
+            const mafias = this.state.players
+              .filter((p) => p.role === "MAFYA" || p.role === "AJAN")
+              .map((p) => p.username)
+              .join(", ")
+
+            if (resolution.additionalKills.includes(playerId)) {
+              message = `${target.username}'in öldürülme anına denk geldin! Mafya seni de fark etti: ${mafias}. Son nefesinle bu bilgiyi yanına aldın...`
+            } else {
+              message = `${target.username} bu gece gözlerinin önünde öldürüldü! Cinayete şahit oldun ve Mafya'yı gördün: ${mafias}`
+            }
+          }
         }
 
         this.onNightResult?.(playerId, message)
       }
     })
+
+    // Ek olumler (Dedektif sucustu yakalandiysa)
+    for (const additionalKillId of resolution.additionalKills) {
+      const additionalKilled = this.state.players.find((p) => p.id === additionalKillId)
+      if (additionalKilled && additionalKilled.isAlive) {
+        additionalKilled.isAlive = false
+
+        const detectiveDeathStories = [
+          `Gece daha da karanlık bir hal aldı! ${additionalKilled.username} olay yerine gittiğinde mafya tarafından suçüstü yakalandı ve o da öldürüldü! (Rolü: ${additionalKilled.role})`,
+          `Çifte felaket! ${additionalKilled.username} cinayeti araştırırken mafyanın eline düştü. Kasaba bu gece iki kayıp birden verdi! (Rolü: ${additionalKilled.role})`,
+          `Mafya bu gece acımasızdı! ${additionalKilled.username} olay yerine vardığında karanlıkta gizlenen tetikçiler onu da hedefe aldı. (Rolü: ${additionalKilled.role})`,
+        ]
+
+        const storyMessage = detectiveDeathStories[Math.floor(Math.random() * detectiveDeathStories.length)]
+        this.addLog(storyMessage, "elimination")
+        this.onPlayerEliminated?.(additionalKilled.id, additionalKilled.username, additionalKilled.role!, "Olay yerinde mafya tarafından öldürüldü")
+      }
+    }
 
     // Win condition kontrolu
     const winner = checkWinCondition(this.state.players)

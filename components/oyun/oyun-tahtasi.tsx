@@ -193,6 +193,13 @@ export function OyunTahtasi({ roomId, roomCode, currentUserId }: OyunTahtasiProp
     }
   }, [selectedTarget, hasSubmittedAction, socket])
 
+  const handleGardiyanAction = useCallback((targetId: string) => {
+    if (gameState?.phase === "day_discussion" && myRole === "GARDIYAN") {
+      socket.emit("game:gardiyan-action", { targetId })
+      setHasSubmittedAction(true)
+    }
+  }, [gameState?.phase, myRole, socket])
+
   const handleVote = useCallback(
     (targetId: string | null) => {
       socket.emit("game:vote", { targetId })
@@ -308,13 +315,16 @@ export function OyunTahtasi({ roomId, roomCode, currentUserId }: OyunTahtasiProp
                       handleVote(id)
                     } else if (gameState.phase === "night") {
                       setSelectedTarget(id)
+                    } else if (gameState.phase === "day_discussion" && myRole === "GARDIYAN" && isAlive) {
+                      handleGardiyanAction(id)
                     }
                   }}
                   selectable={
                     (gameState.phase === "day_voting" && isAlive) ||
-                    (gameState.phase === "night" && isAlive && myRole !== "VATANDAS" && !hasSubmittedAction)
+                    (gameState.phase === "night" && isAlive && myRole !== "VATANDAS" && myRole !== "BASKAN" && myRole !== "GARDIYAN" && !hasSubmittedAction) ||
+                    (gameState.phase === "day_discussion" && isAlive && myRole === "GARDIYAN" && !hasSubmittedAction && player.id !== myPlayerId)
                   }
-                  selectedTarget={selectedTarget}
+                  selectedTarget={selectedTarget || (gameState.phase === "day_discussion" && myRole === "GARDIYAN" && gameState.jailedPlayerId === player.id ? player.id : null)}
                 />
               ))}
             </div>

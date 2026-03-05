@@ -160,6 +160,31 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket): void
     }
   })
 
+  // ---- Gardiyan Aksiyonu (Gunduz) ----
+  socket.on("game:gardiyan-action", ({ targetId }) => {
+    try {
+      if (!socketData.roomId || !socketData.playerId) return
+
+      const engine = getGameEngine(socketData.roomId)
+      if (!engine) return
+
+      const playerRole = engine.getPlayerRole(socketData.playerId)
+      if (playerRole !== "GARDIYAN") {
+        socket.emit("error", { message: "Sadece Gardiyan bu aksiyonu yapabilir" })
+        return
+      }
+
+      const success = engine.setJailedPlayer(targetId)
+      if (success) {
+        socket.emit("game:night-result", { message: `Hedef gece boyunca hapse atılacak ve aksiyon yapamayacak.` })
+      } else {
+        socket.emit("error", { message: "Bu aksiyonu yapamazsiniz" })
+      }
+    } catch (error) {
+      console.error("game:gardiyan-action hatasi:", error)
+    }
+  })
+
   // ---- Oy Ver ----
   socket.on("game:vote", ({ targetId }) => {
     try {

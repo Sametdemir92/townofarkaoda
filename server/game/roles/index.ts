@@ -9,6 +9,9 @@ import { DoktorRole } from "./doktor"
 import { DedektifRole } from "./dedektif"
 import { VatandasRole } from "./vatandas"
 import { MedyumRole } from "./medyum"
+import { BaskanRole } from "./baskan"
+import { AjanRole } from "./ajan"
+import { GardiyanRole } from "./gardiyan"
 
 // Rol instance'lari
 const roleInstances: Record<RoleName, BaseRole> = {
@@ -16,6 +19,9 @@ const roleInstances: Record<RoleName, BaseRole> = {
   DOKTOR: new DoktorRole(),
   DEDEKTIF: new DedektifRole(),
   MEDYUM: new MedyumRole(),
+  BASKAN: new BaskanRole(),
+  AJAN: new AjanRole(),
+  GARDIYAN: new GardiyanRole(),
   VATANDAS: new VatandasRole(),
 }
 
@@ -39,9 +45,12 @@ export function assignRoles(players: Player[]): Player[] {
   let doktorCount = 1
   let dedektifCount = 1
   let medyumCount = 0
+  let baskanCount = count >= 5 ? 1 : 0 // 5+ oyuncuda her zaman 1 Baskan
+  let ajanCount = 0
+  let gardiyanCount = 0
 
-  // Oyuncu sayisina gore rastgele ekstra ozel rol ekleme (birden fazla ayni rolu atayabilme)
-  const extraRolesPossible = count > 5 ? count - (mafyaCount + 2) : 0
+  // Oyuncu sayisina gore rastgele ekstra ozel rol ekleme
+  const extraRolesPossible = count > 5 ? count - (mafyaCount + 2 + baskanCount) : 0
   if (extraRolesPossible > 0) {
     // Rastgele olarak fazladan doktor atansin (%30 sans)
     if (Math.random() < 0.3) {
@@ -51,16 +60,26 @@ export function assignRoles(players: Player[]): Player[] {
     if (Math.random() < 0.3) {
       dedektifCount += 1
     }
-    // Medyum atanma ihtimali (%40 sans - max 1 medyum yeterli genelde)
+    // Medyum atanma ihtimali (%40 sans)
     if (Math.random() < 0.4) {
       medyumCount = 1
+    }
+    // Ajan atanma ihtimali (%35 sans - 7+ oyuncu)
+    if (count >= 7 && Math.random() < 0.35) {
+      ajanCount = 1
+    }
+    // Gardiyan atanma ihtimali (%35 sans - 7+ oyuncu)
+    if (count >= 7 && Math.random() < 0.35) {
+      gardiyanCount = 1
     }
   }
 
   // Ust limitleri asmamak icin guvenlik onlemi
-  let tempVatandas = count - (mafyaCount + doktorCount + dedektifCount + medyumCount)
+  let tempVatandas = count - (mafyaCount + doktorCount + dedektifCount + medyumCount + baskanCount + ajanCount + gardiyanCount)
   if (tempVatandas < 0) {
-    if (medyumCount > 0) { medyumCount--; tempVatandas++; }
+    if (gardiyanCount > 0) { gardiyanCount--; tempVatandas++; }
+    if (tempVatandas < 0 && ajanCount > 0) { ajanCount--; tempVatandas++; }
+    if (tempVatandas < 0 && medyumCount > 0) { medyumCount--; tempVatandas++; }
     if (tempVatandas < 0 && doktorCount > 1) { doktorCount--; tempVatandas++; }
     if (tempVatandas < 0 && dedektifCount > 1) { dedektifCount--; tempVatandas++; }
   }
@@ -72,6 +91,9 @@ export function assignRoles(players: Player[]): Player[] {
     ...Array(doktorCount).fill("DOKTOR"),
     ...Array(dedektifCount).fill("DEDEKTIF"),
     ...Array(medyumCount).fill("MEDYUM"),
+    ...Array(baskanCount).fill("BASKAN"),
+    ...Array(ajanCount).fill("AJAN"),
+    ...Array(gardiyanCount).fill("GARDIYAN"),
     ...Array(vatandasCount).fill("VATANDAS"),
   ]
 

@@ -10,23 +10,30 @@ export interface NightResolution {
   healedPlayerId: string | null
   investigations: Map<string, string> // playerId -> "supheli" | "masum"
   results: NightActionResult[]
+  additionalKills: string[] // Ek olumler (orn: dedektif sucustu yakalanirsa)
 }
 
 /**
  * Gece aksiyonlarini cozumler
- * Oncelik: Mafya oldurur -> Doktor korur -> Dedektif sorusturur
+ * Oncelik: Mafya oldurur -> Doktor korur -> Dedektif sorusturur -> Ajan sorusturur
  */
 export function resolveNightActions(
   nightActions: NightAction[],
-  players: Player[]
+  players: Player[],
+  jailedPlayerId: string | null = null
 ): NightResolution {
   const alivePlayers = players.filter((p) => p.isAlive)
   const results: NightActionResult[] = []
   const investigations = new Map<string, string>()
+  const additionalKills: string[] = []
+
+  // Gardiyanin hapse attigi oyuncunun gece aksiyonlarini filtrele
+  const effectiveActions = jailedPlayerId
+    ? nightActions.filter((a) => a.playerId !== jailedPlayerId)
+    : nightActions
 
   // --- Mafya Oylari ---
-  // Tum mafyalarin hedeflerini topla, en cok oy alan olur
-  const mafyaActions = nightActions.filter((a) => a.role === "MAFYA")
+  const mafyaActions = effectiveActions.filter((a) => a.role === "MAFYA")
   const mafyaVotes = new Map<string, number>()
 
   for (const action of mafyaActions) {
@@ -45,7 +52,7 @@ export function resolveNightActions(
   })
 
   // --- Doktor Korumasi ---
-  const doktorAction = nightActions.find((a) => a.role === "DOKTOR")
+  const doktorAction = effectiveActions.find((a) => a.role === "DOKTOR")
   let healedPlayerId: string | null = null
 
   if (doktorAction) {
@@ -75,7 +82,7 @@ export function resolveNightActions(
   }
 
   // --- Dedektif Sorusturmasi ---
-  const dedektifAction = nightActions.find((a) => a.role === "DEDEKTIF")
+  const dedektifAction = effectiveActions.find((a) => a.role === "DEDEKTIF")
   if (dedektifAction) {
     const role = getRoleInstance("DEDEKTIF")
     const result = role.performNightAction(
@@ -87,6 +94,33 @@ export function resolveNightActions(
       investigations.set(dedektifAction.playerId, result.detail || "masum")
       results.push(result)
     }
+
+    // Eger dedektif mafyanin oldurdugu kisiyi arastirdiysa,
+    // dedektif sucustu yakalanir ve mafya onu da oldurur!
+    if (killedPlayerId && dedektifAction.targetId === killedPlayerId) {
+      additionalKills.push(dedektifAction.playerId)
+      results.push({
+        type: "kill",
+        targetId: dedektifAction.playerId,
+        success: true,
+        detail: "Dedektif olay yerine gidince mafya tarafindan fark edildi ve o da olduruldu!",
+      })
+    }
+  }
+
+  // --- Ajan Sorusturmasi ---
+  const ajanAction = effectiveActions.find((a) => a.role === "AJAN")
+  if (ajanAction) {
+    const target = alivePlayers.find((p) => p.id === ajanAction.targetId)
+    if (target && target.role) {
+      investigations.set(ajanAction.playerId, target.role)
+      results.push({
+        type: "investigate",
+        targetId: ajanAction.targetId,
+        success: true,
+        detail: target.role,
+      })
+    }
   }
 
   return {
@@ -94,5 +128,6 @@ export function resolveNightActions(
     healedPlayerId,
     investigations,
     results,
+    additionalKills,
   }
 }

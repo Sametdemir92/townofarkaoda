@@ -18,6 +18,7 @@ export interface ClientToServerEvents {
   // Oyun olaylari
   "game:start": (data: { roomId: string }) => void
   "game:night-action": (data: { targetId: string }) => void
+  "game:gardiyan-action": (data: { targetId: string }) => void
   "game:vote": (data: { targetId: string | null }) => void
 
   // Chat olaylari
