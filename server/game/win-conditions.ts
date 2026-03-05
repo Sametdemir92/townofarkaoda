@@ -1,0 +1,32 @@
+// ============================================
+// Kazanma Kosullari
+// ============================================
+
+import type { Player, WinnerTeam } from "@/types/game"
+
+/**
+ * Oyunun bitip bitmedigini kontrol eder
+ * @returns Kazanan takim veya null (oyun devam)
+ */
+export function checkWinCondition(players: Player[]): WinnerTeam | null {
+  const alivePlayers = players.filter((p) => p.isAlive)
+  const aliveMafia = alivePlayers.filter((p) => p.role === "MAFYA")
+  const aliveTown = alivePlayers.filter((p) => p.role !== "MAFYA")
+
+  // Tum mafyalar oldu -> kasaba kazanir
+  if (aliveMafia.length === 0) {
+    return "town"
+  }
+
+  // Mafya sayisi >= kasaba sayisi -> mafya kazanir
+  if (aliveMafia.length >= aliveTown.length) {
+    return "mafia"
+  }
+
+  // Hayatta kimse kalmadi -> berabere
+  if (alivePlayers.length === 0) {
+    return "draw"
+  }
+
+  return null
+}
