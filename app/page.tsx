@@ -282,11 +282,12 @@ export default function HomePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {[
                   { name: "Mafya", emoji: "🔪", desc: "Geceleri oldurur", color: "text-red-500 dark:text-red-400" },
                   { name: "Doktor", emoji: "💊", desc: "Geceleri korur", color: "text-green-500 dark:text-green-400" },
                   { name: "Dedektif", emoji: "🔍", desc: "Geceleri sorusturur", color: "text-blue-500 dark:text-blue-400" },
+                  { name: "Medyum", emoji: "🔮", desc: "Ölülerle konuşur", color: "text-purple-500 dark:text-purple-400" },
                   { name: "Vatandas", emoji: "👤", desc: "Oylama gucu", color: "text-gray-500 dark:text-gray-400" },
                 ].map((role) => (
                   <div

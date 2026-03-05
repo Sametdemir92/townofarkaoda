@@ -5,9 +5,12 @@
 import type { Player, RoleName, NightAction, Vote } from "@/types/game"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 
-// Gemini AI istemcisi
-// apiKey çevresel değişkeninden (GEMINI_API_KEY) çekilerek tanımlanır
-const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null
+// Gemini AI istemcisi getirmek için lazy yüklüyoruz
+// process.env.GEMINI_API_KEY sunucu çalışırken okunabilsin diye
+function getGenAIClient() {
+  if (!process.env.GEMINI_API_KEY) return null
+  return new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+}
 
 // ---- Rastgele Secim Yardimcilari ----
 
@@ -231,6 +234,7 @@ export async function generateBotMessage(
   }
 
   // Gemini AI Entegrasyonu
+  const genAI = getGenAIClient()
   if (genAI) {
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
