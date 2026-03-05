@@ -236,10 +236,10 @@ export function OyunTahtasi({ roomId, roomCode, currentUserId }: OyunTahtasiProp
     gameState.phase === "night"
       ? "phase-night"
       : gameState.phase === "day_voting"
-      ? "phase-voting"
-      : gameState.phase.startsWith("day")
-      ? "phase-day"
-      : ""
+        ? "phase-voting"
+        : gameState.phase.startsWith("day")
+          ? "phase-day"
+          : ""
 
   return (
     <div className={`min-h-screen transition-all duration-1000 ${phaseClass} ${!phaseClass ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" : ""}`}>
@@ -258,12 +258,23 @@ export function OyunTahtasi({ roomId, roomCode, currentUserId }: OyunTahtasiProp
 
           {/* Rol Badge */}
           {myRole && (
-            <Badge
-              variant={ROLE_DEFINITIONS[myRole].team === "mafia" ? "mafia" : "town"}
-              className="text-sm"
-            >
-              {ROLE_DEFINITIONS[myRole].emoji} {ROLE_DEFINITIONS[myRole].displayName}
-            </Badge>
+            <div className="flex items-center gap-2 group cursor-default">
+              <span className="text-gray-400 text-xs hidden sm:block uppercase tracking-wider font-bold">Rolün:</span>
+              <Badge
+                variant={ROLE_DEFINITIONS[myRole].team === "mafia" ? "mafia" : "town"}
+                className={`text-sm px-2 py-1 pr-3 shadow-[0_0_10px_rgba(255,255,255,0.1)] transition-all duration-500 hover:scale-105 ${ROLE_DEFINITIONS[myRole].team === "mafia" ? "hover:shadow-[0_0_15px_rgba(220,38,38,0.5)]" : "hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]"}`}
+              >
+                <div className="w-6 h-6 rounded-full overflow-hidden mr-2 border border-white/20 inline-block bg-black align-middle">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/roles/${myRole.toLowerCase()}.png`}
+                    alt={myRole}
+                    className="w-full h-full object-cover animate-pulse"
+                  />
+                </div>
+                {ROLE_DEFINITIONS[myRole].displayName}
+              </Badge>
+            </div>
           )}
         </div>
       </header>

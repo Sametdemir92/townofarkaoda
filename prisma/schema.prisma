@@ -28,8 +28,8 @@ model Room {
   code       String     @unique
   hostId     String
   status     RoomStatus @default(WAITING)
-  minPlayers Int        @default(5)
-  maxPlayers Int        @default(15)
+  minPlayers Int        @default(3)
+  maxPlayers Int        @default(10)
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
   players    Player[]

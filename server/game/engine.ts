@@ -275,18 +275,50 @@ export class GameEngine {
       if (killed) {
         killed.isAlive = false
         this.state.eliminatedTonight = killed.id
-        this.addLog(
-          `${killed.username} mafya tarafindan olduruldu! (${killed.role})`,
-          "elimination"
-        )
-        this.onPlayerEliminated?.(killed.id, killed.username, killed.role!, "Mafya tarafindan olduruldu")
+
+        // Rastgele olum hikayesi varyasyonlari
+        const deathStories = [
+          `Gece karanlığında kasabada bir çığlık koptu! Sabah olduğunda ${killed.username} evinde ölü bulundu. Mafya işini acımasızca halletmişti. (Rolü: ${killed.role})`,
+          `Gece sessizdi ama sabahın ilk ışıklarıyla acı gerçek ortaya çıktı. ${killed.username} mafyanın kurbanı olmuştu. (Rolü: ${killed.role})`,
+          `Kan donduran bir geceydi. Kasabalılar uyandıklarında ${killed.username} isimli sakinin cansız bedeniyle karşılaştı. (Rolü: ${killed.role})`,
+          `Kötü niyetli gölgeler gece boyunca avlandı. Maalesef hedef tahtasında ${killed.username} vardı ve sabaha çıkamadı. (Rolü: ${killed.role})`,
+          `Kasabanın köpekleri gece boyu uludu. Sabahın ilk ışıklarıyla birlikte ${killed.username}'in mafya tarafından infaz edildiği öğrenildi. (Rolü: ${killed.role})`,
+          `Sokaklarda fısıltılar dolaşıyordu... Fısıltılar acı bir gerçeğe dönüştü: ${killed.username} bu kanlı geceyi atlatamadı! (Rolü: ${killed.role})`,
+          `Bir silah sesi gecenin sessizliğini bıçak gibi kesti. Güneş doğduğunda ${killed.username}'in bedeni kanlar içindeydi. (Rolü: ${killed.role})`
+        ]
+
+        const storyIndex = Math.floor(Math.random() * deathStories.length)
+        const storyMessage = deathStories[storyIndex]
+
+        this.addLog(storyMessage, "elimination")
+        this.onPlayerEliminated?.(killed.id, killed.username, killed.role!, "Mafya tarafından öldürüldü")
       }
     } else {
       // Kimse olmedi
       if (resolution.healedPlayerId) {
-        this.addLog("Doktor basarili bir mudahale yapti! Bu gece kimse olmedi.", "heal")
+        // Rastgele kurtarma hikayesi varyasyonlari
+        const healStories = [
+          "Gece karanlığında birileri sinsi planlar peşindeydi, ancak Doktor tam zamanında oradaydı! Sabah kimsenin burnu bile kanamadan uyandık.",
+          "Kasabanın sokaklarında karanlık bir gölge belirdi ama tetikte olan Doktor felaketi önledi. Ölüm bu gece kasabamızı es geçti!",
+          "Mafya tetikçileri pusu kurmuştu ama hesaba katmadıkları biri vardı: Doktor herkesin hayatını korumayı başardı!",
+          "Ölüm meleği kasabaya uğradı ama kahraman bir müdahale onu geri püskürttü! Kusursuz ve kayıpsız bir gece geride kaldı.",
+          "Eczane dolabından çıkan birkaç sargı bezi ve doğru bir müdahale kasabada bir hayat kurtardı. Kimse zarar görmedi!"
+        ]
+
+        const storyMessage = healStories[Math.floor(Math.random() * healStories.length)]
+        this.addLog(storyMessage, "heal")
       } else {
-        this.addLog("Bu gece kimse olmedi.", "info")
+        // Rastgele olaysiz gece varyasyonlari
+        const peacefulStories = [
+          "Rüzgarın uğultusu dışında gece yavaş ve sessiz geçti. Sabah olunca herkes yatağından güvenle kalktı.",
+          "Şaşırtıcı derecede huzurlu bir geceydi. Görünüşe göre mafya da biraz uykuya ihtiyaç duymuş. Kimse ölmedi!",
+          "Sokak köpeklerinin bile sesi çıkmadı. Sessiz ve olaysız bir geceyi geride bıraktık.",
+          "Gece kalın bir sis bulutu kasabanın üzerine çöktü ama altında hiç kan dökülmedi. Herkes sağ salim.",
+          "Baykuşların ötüşü eşliğinde herkes mışıl mışıl uyudu. Kötüler bu gece grevdeydi anlaşılan!"
+        ]
+
+        const storyMessage = peacefulStories[Math.floor(Math.random() * peacefulStories.length)]
+        this.addLog(storyMessage, "info")
       }
     }
 

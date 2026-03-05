@@ -30,10 +30,34 @@ export function getRoleInstance(roleName: RoleName): BaseRole {
  */
 export function assignRoles(players: Player[]): Player[] {
   const count = players.length
+  // Mafya sayisi
   const mafyaCount = Math.max(1, Math.floor(count / 4))
-  const doktorCount = 1
-  const dedektifCount = 1
-  const vatandasCount = count - mafyaCount - doktorCount - dedektifCount
+
+  // Baslangic olarak 1 Doktor, 1 Dedektif
+  let doktorCount = 1
+  let dedektifCount = 1
+
+  // Oyuncu sayisina gore rastgele ekstra ozel rol ekleme (birden fazla ayni rolu atayabilme)
+  // Ornegin, 6 ve uzeri oyuncu varsa belli bir olasilikla 2. doktor veya 2. dedektif eklenebilir.
+  const extraRolesPossible = count > 5 ? count - (mafyaCount + 2) : 0
+  if (extraRolesPossible > 0) {
+    // Rastgele olarak fazladan doktor atansin (%30 sans)
+    if (Math.random() < 0.3) {
+      doktorCount += 1
+    }
+    // Rastgele olarak fazladan dedektif atansin (%30 sans)
+    if (Math.random() < 0.3) {
+      dedektifCount += 1
+    }
+  }
+
+  // Ust limitleri asmamak icin guvenlik onlemi
+  let tempVatandas = count - (mafyaCount + doktorCount + dedektifCount)
+  if (tempVatandas < 0) {
+    if (doktorCount > 1) { doktorCount--; tempVatandas++; }
+    if (tempVatandas < 0 && dedektifCount > 1) { dedektifCount--; tempVatandas++; }
+  }
+  const vatandasCount = Math.max(0, tempVatandas)
 
   // Rol listesi olustur
   const roles: RoleName[] = [
@@ -46,7 +70,7 @@ export function assignRoles(players: Player[]): Player[] {
   // Karistir (Fisher-Yates shuffle)
   for (let i = roles.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[roles[i], roles[j]] = [roles[j], roles[i]]
+      ;[roles[i], roles[j]] = [roles[j], roles[i]]
   }
 
   // Oyunculara ata

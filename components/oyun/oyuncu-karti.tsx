@@ -51,23 +51,28 @@ export function OyuncuKarti({
           {/* Durum Gostergesi */}
           <div className="relative">
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${
-                player.isAlive
-                  ? "bg-gray-700"
-                  : "bg-red-900/30"
-              }`}
+              className={`w-11 h-11 rounded-full flex items-center justify-center text-lg overflow-hidden transition-all duration-300 border-2 ${player.isAlive
+                  ? "border-gray-600 bg-gray-700 shadow-[0_0_10px_rgba(255,255,255,0.1)]"
+                  : "border-red-800/80 bg-red-900/50 grayscale sepia shadow-[0_0_15px_rgba(220,38,38,0.4)]"
+                } ${isSelected ? "scale-110 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)]" : ""}`}
             >
-              {player.isAlive ? (
-                roleInfo && !player.isAlive ? roleInfo.emoji : "👤"
+              {player.role ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={`/roles/${player.role.toLowerCase()}.png`}
+                  alt={player.role}
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                />
+              ) : player.isAlive ? (
+                "👤"
               ) : (
                 <Skull className="h-5 w-5 text-red-400" />
               )}
             </div>
             {/* Baglanti durumu */}
             <div
-              className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-gray-800 ${
-                player.isConnected ? "bg-green-500" : "bg-gray-500"
-              }`}
+              className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-gray-800 z-10 ${player.isConnected ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-gray-500"
+                }`}
             />
           </div>
 
