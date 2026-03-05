@@ -3,14 +3,9 @@
 // ============================================
 
 import type { Player, RoleName, NightAction, Vote } from "@/types/game"
-import { GoogleGenerativeAI } from "@google/generative-ai"
 
-// Gemini AI istemcisi getirmek için lazy yüklüyoruz
-// process.env.GEMINI_API_KEY sunucu çalışırken okunabilsin diye
-function getGenAIClient() {
-  if (!process.env.GEMINI_API_KEY) return null
-  return new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-}
+const ZHIPU_API_KEY = "9e3419e202d64ab68d0b36a29e0b630c.CiRfrF4TyuTLOnjj"
+const ZHIPU_API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
 
 // ---- Rastgele Secim Yardimcilari ----
 
@@ -247,12 +242,9 @@ export async function generateBotMessage(
     }
   }
 
-  // Gemini AI Entegrasyonu
-  const genAI = getGenAIClient()
-  if (genAI) {
+  // Zhipu AI (GLM-4.7-Flash) Entegrasyonu
+  if (ZHIPU_API_KEY) {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
-
       // Oyuncuların güncel listesi
       const alivePlayers = allPlayers.filter(p => p.isAlive).map(p => p.username).join(", ")
       const deadPlayers = allPlayers.filter(p => !p.isAlive).map(p => p.username).join(", ")
@@ -275,8 +267,24 @@ Kurallar:
 Lütfen sadece chate yazılacak mesajı ver:
       `.trim()
 
-      const result = await model.generateContent(prompt)
-      const text = result.response.text().trim()
+      const response = await fetch(ZHIPU_API_URL, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${ZHIPU_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "GLM-4.7-Flash",
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Zhipu API hatasi: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      const text = result?.choices?.[0]?.message?.content?.trim() || "";
 
       // Çift tırnak varsa temizle 
       const cleanText = text.replace(/^"|"$/g, '').trim()
@@ -285,7 +293,7 @@ Lütfen sadece chate yazılacak mesajı ver:
         return cleanText
       }
     } catch (error) {
-      console.error("[Bot AI] Gemini API hatası, fallback mesajına geçiliyor:", error)
+      console.error("[Bot AI] Zhipu API hatası, fallback mesajına geçiliyor:", error)
     }
   }
 

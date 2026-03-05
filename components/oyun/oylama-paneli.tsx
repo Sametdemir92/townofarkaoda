@@ -29,11 +29,6 @@ export function OylamaPaneli({
   const getVoteCount = (playerId: string) =>
     votes.filter((v) => v.targetId === playerId).length
 
-  const getVoters = (playerId: string) =>
-    votes
-      .filter((v) => v.targetId === playerId)
-      .map((v) => players.find((p) => p.id === v.voterId)?.username || "?")
-
   return (
     <Card className="bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-500/30">
       <CardHeader>
@@ -57,7 +52,6 @@ export function OylamaPaneli({
             {/* Oy secenekleri */}
             {alivePlayers.map((player) => {
               const voteCount = getVoteCount(player.id)
-              const voters = getVoters(player.id)
               const isMyVote = myVote === player.id
 
               return (
@@ -83,9 +77,6 @@ export function OylamaPaneli({
                         <Badge variant="destructive" className="text-xs">
                           {voteCount} oy
                         </Badge>
-                        <span className="text-xs text-gray-500 line-clamp-1 max-w-[80px]">
-                          ({voters.join(", ")})
-                        </span>
                       </div>
                     )}
                     <Target className="h-4 w-4 text-gray-400 dark:text-gray-500" />
