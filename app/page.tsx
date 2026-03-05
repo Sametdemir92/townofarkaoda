@@ -2,11 +2,19 @@
 
 import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Plus, LogIn, LogOut, Swords } from "lucide-react"
+import { Users, Plus, LogIn, LogOut, Swords, List } from "lucide-react"
+
+interface Room {
+  id: string
+  code: string
+  playerCount: number
+  maxPlayers: number
+  createdAt: string
+}
 
 export default function HomePage() {
   const { data: session, status } = useSession()
@@ -15,6 +23,31 @@ export default function HomePage() {
   const [isCreating, setIsCreating] = useState(false)
   const [isJoining, setIsJoining] = useState(false)
   const [error, setError] = useState("")
+  const [openRooms, setOpenRooms] = useState<Room[]>([])
+  const [isLoadingRooms, setIsLoadingRooms] = useState(true)
+
+  const fetchRooms = async () => {
+    try {
+      const res = await fetch("/api/rooms")
+      const data = await res.json()
+      if (data.success) {
+        setOpenRooms(data.data)
+      }
+    } catch (err) {
+      console.error("Odalar getirilemedi", err)
+    } finally {
+      setIsLoadingRooms(false)
+    }
+  }
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchRooms()
+      // Her 10 saniyede bir odayi yenile
+      const interval = setInterval(fetchRooms, 10000)
+      return () => clearInterval(interval)
+    }
+  }, [status])
 
   // Giris yapmamissa yonlendir
   if (status === "unauthenticated") {
@@ -50,8 +83,10 @@ export default function HomePage() {
     }
   }
 
-  const handleJoinRoom = async () => {
-    if (!roomCode.trim()) {
+  const handleJoinRoom = async (codeToJoin?: string) => {
+    const code = (codeToJoin || roomCode).trim().toUpperCase()
+
+    if (!code) {
       setError("Oda kodu gerekli")
       return
     }
@@ -60,9 +95,6 @@ export default function HomePage() {
     setError("")
 
     try {
-      // Oda kodunu buyuk harfe cevir ve bosluklari temizle
-      const code = roomCode.trim().toUpperCase()
-
       const res = await fetch(`/api/rooms?code=${code}`)
       const data = await res.json()
 
@@ -75,7 +107,7 @@ export default function HomePage() {
         }
       } else {
         // Direkt kod ile gitmeyi dene
-        router.push(`/oda/${roomCode.trim()}`)
+        router.push(`/oda/${code}`)
       }
     } catch {
       setError("Baglanti hatasi")
@@ -97,7 +129,7 @@ export default function HomePage() {
             <span className="text-sm text-gray-400">
               Hosgeldin, <span className="text-white font-medium">{(session?.user as any)?.username || session?.user?.name}</span>
             </span>
-            <Button variant="ghost" size="sm" onClick={() => signOut()}>
+            <Button variant="ghost" size="sm" onClick={() => signOut({ callbackUrl: "/auth/giris" })}>
               <LogOut className="h-4 w-4 mr-1" />
               Cikis
             </Button>
@@ -107,7 +139,7 @@ export default function HomePage() {
 
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full space-y-6">
+        <div className="max-w-4xl w-full space-y-6">
           {/* Title */}
           <div className="text-center space-y-2">
             <h2 className="text-4xl font-bold text-white">
@@ -164,7 +196,7 @@ export default function HomePage() {
                 />
                 <Button
                   className="w-full bg-green-600 hover:bg-green-700"
-                  onClick={handleJoinRoom}
+                  onClick={() => handleJoinRoom()}
                   disabled={isJoining || !roomCode.trim()}
                 >
                   {isJoining ? "Katiliniyor..." : "Odaya Katil"}
@@ -179,6 +211,65 @@ export default function HomePage() {
               {error}
             </div>
           )}
+
+          {/* Acik Odalar Listesi */}
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <List className="h-5 w-5 text-yellow-400" />
+                Acik Odalar
+              </CardTitle>
+              <CardDescription>
+                Bekleyen oyunlara hizlica katil
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingRooms ? (
+                <div className="text-center text-gray-400 py-4 animate-pulse">
+                  Odalar yukleniyor...
+                </div>
+              ) : openRooms.length === 0 ? (
+                <div className="text-center text-gray-500 py-4 bg-gray-900/50 rounded-lg border border-gray-700">
+                  <p>Su an acik bir oda bulunmuyor.</p>
+                  <p className="text-sm mt-1">Hemen yeni bir oda olusturabilirsin!</p>
+                </div>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {openRooms.map((room) => (
+                    <div
+                      key={room.id}
+                      className="bg-gray-700/40 hover:bg-gray-700/60 transition-colors border border-gray-600 rounded-lg p-3 flex flex-col justify-between"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="space-y-1">
+                          <span className="inline-block px-2 py-1 bg-gray-900 rounded text-xs font-mono text-white tracking-widest">
+                            {room.code}
+                          </span>
+                          <div className="text-xs text-gray-400 flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {room.playerCount} / {room.maxPlayers} Oyuncu
+                          </div>
+                        </div>
+                        <div className="text-[10px] text-gray-500">
+                          {new Date(room.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="w-full mt-2 bg-green-600 hover:bg-green-700 text-xs"
+                        onClick={() => handleJoinRoom(room.code)}
+                        disabled={isJoining || room.playerCount >= room.maxPlayers}
+                      >
+                        {room.playerCount >= room.maxPlayers ? "Oda Dolu" : "Katil"}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Roller Bilgi */}
           <Card className="bg-gray-800/30 border-gray-700">
