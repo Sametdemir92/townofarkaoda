@@ -20,6 +20,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const body = await req.json().catch(() => ({}))
+    const roomName = body.name || `Oda ${Math.floor(Math.random() * 1000)}`
+
     const userId = (session.user as any).id
 
     // Benzersiz oda kodu olustur
@@ -36,6 +39,7 @@ export async function POST(req: NextRequest) {
     const room = await prisma.room.create({
       data: {
         code,
+        name: roomName,
         hostId: userId,
       },
     })
@@ -78,6 +82,7 @@ export async function GET() {
       data: rooms.map((r: any) => ({
         id: r.id,
         code: r.code,
+        name: r.name || `Oda ${r.code}`,
         playerCount: r.players.length,
         maxPlayers: r.maxPlayers,
         createdAt: r.createdAt,

@@ -149,6 +149,27 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
     }
   })
 
+  // ---- Odadan Kapat (Sadece Host) ----
+  socket.on("room:close", async ({ roomId }) => {
+    try {
+      const room = await prisma.room.findUnique({ where: { id: roomId } })
+      
+      // Sadece host kapatabilir
+      if (room && room.hostId === socketData.userId) {
+        await prisma.room.update({
+          where: { id: roomId },
+          data: { status: "ENDED" }
+        })
+        
+        // Herkese odanin kapandigini bildir
+        io.to(roomId).emit("room:closed")
+        io.to(roomId).emit("room:error", { message: "Oda kurucu tarafindan kapatildi." })
+      }
+    } catch (error) {
+      console.error("room:close hatasi:", error)
+    }
+  })
+
   // ---- Odadan Ayril ----
   socket.on("room:leave", async ({ roomId }) => {
     try {

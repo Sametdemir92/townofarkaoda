@@ -10,6 +10,7 @@ export interface ClientToServerEvents {
   // Oda olaylari
   "room:join": (data: { roomCode: string }) => void
   "room:leave": (data: { roomId: string }) => void
+  "room:close": (data: { roomId: string }) => void
 
   // Bot olaylari
   "room:add-bot": (data: { roomId: string }) => void
@@ -31,6 +32,7 @@ export interface ServerToClientEvents {
   // Oda olaylari
   "room:updated": (data: { players: Array<{ id: string; userId: string; username: string; isConnected: boolean; isBot: boolean }> }) => void
   "room:error": (data: { message: string }) => void
+  "room:closed": () => void
 
   // Oyun olaylari
   "game:state-update": (data: GameState) => void

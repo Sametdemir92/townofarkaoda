@@ -26,6 +26,7 @@ model User {
 model Room {
   id         String     @id @default(cuid())
   code       String     @unique
+  name       String?    // Added room name
   hostId     String
   status     RoomStatus @default(WAITING)
   minPlayers Int        @default(3)

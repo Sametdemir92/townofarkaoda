@@ -45,6 +45,7 @@ export async function GET(
       data: {
         id: room.id,
         code: room.code,
+        name: room.name || `Oda ${room.code}`,
         hostId: room.hostId,
         status: room.status,
         isHost: room.hostId === userId,

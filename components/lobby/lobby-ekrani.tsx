@@ -16,6 +16,7 @@ interface LobbyPlayer {
 
 interface LobbyEkraniProps {
   roomCode: string
+  roomName?: string
   roomId: string
   players: LobbyPlayer[]
   isHost: boolean
@@ -28,6 +29,7 @@ interface LobbyEkraniProps {
 
 export function LobbyEkrani({
   roomCode,
+  roomName,
   roomId,
   players,
   isHost,
@@ -39,8 +41,9 @@ export function LobbyEkrani({
 }: LobbyEkraniProps) {
   const [copied, setCopied] = useState(false)
 
-  const copyRoomCode = () => {
-    navigator.clipboard.writeText(roomCode)
+  const copyRoomLink = () => {
+    const link = `${window.location.origin}/oda/${roomId}`
+    navigator.clipboard.writeText(link)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -54,17 +57,17 @@ export function LobbyEkrani({
       <div className="max-w-lg w-full space-y-6">
         {/* Oda Bilgisi */}
         <div className="text-center space-y-3">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Bekleme Odasi</h2>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{roomName || 'Bekleme Odasi'}</h2>
 
-          {/* Oda Kodu */}
+          {/* Oda Linki */}
           <div className="flex items-center justify-center gap-2">
-            <span className="text-gray-600 dark:text-gray-400">Oda Kodu:</span>
+            <span className="text-gray-600 dark:text-gray-400">Davet Linki:</span>
             <button
-              onClick={copyRoomCode}
+              onClick={copyRoomLink}
               className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700/50 dark:hover:bg-gray-700 rounded-lg px-4 py-2 transition-colors"
             >
-              <span className="text-2xl font-mono font-bold text-yellow-600 dark:text-yellow-400 tracking-widest">
-                {roomCode}
+              <span className="text-sm font-medium text-yellow-600 dark:text-yellow-400 truncate max-w-[200px]">
+                Linki Kopyala
               </span>
               <Copy className="h-4 w-4 text-gray-500 dark:text-gray-400" />
             </button>
@@ -75,7 +78,7 @@ export function LobbyEkrani({
             </span>
           )}
           <p className="text-gray-500 text-sm">
-            Bu kodu paylasarak arkadaslarini davet edebilirsin
+            Bu linki veya oyunu ana sayfadan bularak arkadaslarini davet edebilirsin
           </p>
         </div>
 

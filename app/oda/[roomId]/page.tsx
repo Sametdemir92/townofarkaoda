@@ -12,6 +12,7 @@ import { OyunTahtasi } from "@/components/oyun/oyun-tahtasi"
 interface RoomData {
   id: string
   code: string
+  name: string
   hostId: string
   status: string
   isHost: boolean
@@ -113,6 +114,11 @@ export default function OdaPage() {
       setError(message)
     })
 
+    // Oda kapatildi
+    socket.on("room:closed", () => {
+      router.push("/")
+    })
+
     // Oyun state gelirse oyun baslamis demektir
     socket.on("game:state-update", () => {
       setGameStarted(true)
@@ -127,6 +133,7 @@ export default function OdaPage() {
       socket.off("disconnect")
       socket.off("room:updated")
       socket.off("room:error")
+      socket.off("room:closed")
       socket.off("game:state-update")
       socket.off("game:phase-change")
       disconnectSocket()
@@ -199,7 +206,9 @@ export default function OdaPage() {
       <OyunTahtasi
         roomId={roomId}
         roomCode={roomData.code}
+        roomName={roomData.name}
         currentUserId={userId}
+        isHost={roomData.isHost}
       />
     )
   }
@@ -208,6 +217,7 @@ export default function OdaPage() {
   return (
     <LobbyEkrani
       roomCode={roomData.code}
+      roomName={roomData.name}
       roomId={roomId}
       players={lobbyPlayers}
       isHost={roomData.isHost}

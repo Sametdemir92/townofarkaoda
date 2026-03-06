@@ -12,6 +12,7 @@ import { ModeToggle } from "@/components/theme-toggle"
 interface Room {
   id: string
   code: string
+  name: string
   playerCount: number
   maxPlayers: number
   createdAt: string
@@ -20,7 +21,7 @@ interface Room {
 export default function HomePage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [roomCode, setRoomCode] = useState("")
+  const [roomName, setRoomName] = useState("")
   const [isCreating, setIsCreating] = useState(false)
   const [isJoining, setIsJoining] = useState(false)
   const [error, setError] = useState("")
@@ -69,7 +70,11 @@ export default function HomePage() {
     setError("")
 
     try {
-      const res = await fetch("/api/rooms", { method: "POST" })
+      const res = await fetch("/api/rooms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: roomName })
+      })
       const data = await res.json()
 
       if (data.success) {
@@ -84,37 +89,10 @@ export default function HomePage() {
     }
   }
 
-  const handleJoinRoom = async (codeToJoin?: string) => {
-    const code = (codeToJoin || roomCode).trim().toUpperCase()
-
-    if (!code) {
-      setError("Oda kodu gerekli")
-      return
-    }
-
+  const handleJoinRoom = async (roomIdOrCode: string) => {
+    if (!roomIdOrCode) return
     setIsJoining(true)
-    setError("")
-
-    try {
-      const res = await fetch(`/api/rooms?code=${code}`)
-      const data = await res.json()
-
-      if (data.success && data.data.length > 0) {
-        const room = data.data.find((r: any) => r.code === code)
-        if (room) {
-          router.push(`/oda/${room.id}`)
-        } else {
-          setError("Oda bulunamadi")
-        }
-      } else {
-        // Direkt kod ile gitmeyi dene
-        router.push(`/oda/${code}`)
-      }
-    } catch {
-      setError("Baglanti hatasi")
-    } finally {
-      setIsJoining(false)
-    }
+    router.push(`/oda/${roomIdOrCode}`)
   }
 
   return (
@@ -153,7 +131,7 @@ export default function HomePage() {
           </div>
 
           {/* Actions */}
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-1 gap-4">
             {/* Oda Olustur */}
             <Card className="bg-white/80 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:border-blue-500/50 transition-colors">
               <CardHeader>
@@ -165,43 +143,21 @@ export default function HomePage() {
                   Yeni bir oyun odasi olustur ve arkadaslarini davet et
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
+                <Input
+                  placeholder="Oda Adi Giriniz (Opsiyonel)"
+                  value={roomName}
+                  onChange={(e) => setRoomName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleCreateRoom()}
+                  maxLength={30}
+                  className="bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white text-center text-lg"
+                />
                 <Button
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                   onClick={handleCreateRoom}
                   disabled={isCreating}
                 >
                   {isCreating ? "Olusturuluyor..." : "Yeni Oda Olustur"}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Odaya Katil */}
-            <Card className="bg-white/80 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:border-green-500/50 transition-colors">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
-                  <LogIn className="h-5 w-5 text-green-500 dark:text-green-400" />
-                  Odaya Katil
-                </CardTitle>
-                <CardDescription>
-                  Oda kodunu girerek mevcut bir oyuna katil
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Input
-                  placeholder="Oda kodunu gir (ornek: ABC123)"
-                  value={roomCode}
-                  onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                  onKeyDown={(e) => e.key === "Enter" && handleJoinRoom()}
-                  maxLength={6}
-                  className="bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white uppercase tracking-widest text-center text-lg"
-                />
-                <Button
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
-                  onClick={() => handleJoinRoom()}
-                  disabled={isJoining || !roomCode.trim()}
-                >
-                  {isJoining ? "Katiliniyor..." : "Odaya Katil"}
                 </Button>
               </CardContent>
             </Card>
@@ -244,8 +200,8 @@ export default function HomePage() {
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div className="space-y-1">
-                          <span className="inline-block px-2 py-1 bg-gray-200 dark:bg-gray-900 rounded text-xs font-mono text-gray-800 dark:text-white tracking-widest">
-                            {room.code}
+                          <span className="inline-block px-2 py-1 bg-gray-200 dark:bg-gray-900 rounded text-sm font-semibold text-gray-800 dark:text-white">
+                            {room.name}
                           </span>
                           <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                             <Users className="h-3 w-3" />
@@ -261,7 +217,7 @@ export default function HomePage() {
                         size="sm"
                         variant="default"
                         className="w-full mt-2 bg-green-600 hover:bg-green-700 text-xs text-white"
-                        onClick={() => handleJoinRoom(room.code)}
+                        onClick={() => handleJoinRoom(room.id)}
                         disabled={isJoining || room.playerCount >= room.maxPlayers}
                       >
                         {room.playerCount >= room.maxPlayers ? "Oda Dolu" : "Katil"}

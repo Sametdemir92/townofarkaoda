@@ -22,10 +22,12 @@ import { Swords } from "lucide-react"
 interface OyunTahtasiProps {
   roomId: string
   roomCode: string
+  roomName?: string
   currentUserId: string
+  isHost?: boolean
 }
 
-export function OyunTahtasi({ roomId, roomCode, currentUserId }: OyunTahtasiProps) {
+export function OyunTahtasi({ roomId, roomCode, roomName, currentUserId, isHost }: OyunTahtasiProps) {
   const socket = getSocket()
   const {
     gameState,
@@ -216,12 +218,15 @@ export function OyunTahtasi({ roomId, roomCode, currentUserId }: OyunTahtasiProp
   )
 
   // ---- Oyun Sonu ----
-  if (endData) {
+  const renderSonucEkrani = () => {
+    if (!endData) return null
     return (
       <SonucEkrani
         winner={endData.winner}
         players={endData.players}
         myPlayerId={myPlayerId || ""}
+        isHost={isHost || false}
+        roomId={roomId}
       />
     )
   }
@@ -256,8 +261,8 @@ export function OyunTahtasi({ roomId, roomCode, currentUserId }: OyunTahtasiProp
           <div className="flex items-center gap-3">
             <Swords className="h-5 w-5 text-red-600 dark:text-red-500" />
             <span className="font-bold text-gray-900 dark:text-white">Town of Arkaoda</span>
-            <Badge variant="outline" className="text-gray-300">
-              {roomCode}
+            <Badge variant="outline" className="text-gray-600 dark:text-gray-300">
+              {roomName || roomCode}
             </Badge>
           </div>
 
@@ -402,6 +407,9 @@ export function OyunTahtasi({ roomId, roomCode, currentUserId }: OyunTahtasiProp
           </div>
         </div>
       </div>
+
+      {/* Pop-up Modal */}
+      {renderSonucEkrani()}
     </div>
   )
 }

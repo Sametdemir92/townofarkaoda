@@ -43,13 +43,13 @@ export function ChatPaneli({
     setInputValue("")
   }
 
-  const canChat = (isAlive && phase !== "lobby" && phase !== "ended") || (!isAlive && activeChannel === "DEAD") || (isAlive && myRole === "MEDYUM" && activeChannel === "DEAD")
+  const canChat = phase === "ended" || (isAlive && phase !== "lobby") || (!isAlive && activeChannel === "DEAD") || (isAlive && myRole === "MEDYUM" && activeChannel === "DEAD")
   const canUseMafiaChat = (myRole === "MAFYA" || myRole === "AJAN") && phase === "night" && activeChannel === "MAFIA"
-  const canUsePublicChat = isAlive && phase !== "night" && activeChannel === "PUBLIC"
-  const canUseDeadChat = (!isAlive && activeChannel === "DEAD") || (isAlive && myRole === "MEDYUM" && activeChannel === "DEAD")
+  const canUsePublicChat = phase === "ended" || (isAlive && phase !== "night" && activeChannel === "PUBLIC")
+  const canUseDeadChat = phase === "ended" || (!isAlive && activeChannel === "DEAD") || (isAlive && myRole === "MEDYUM" && activeChannel === "DEAD")
 
-  const showMafiaTab = myRole === "MAFYA" || myRole === "AJAN"
-  const showDeadTab = !isAlive || myRole === "MEDYUM"
+  const showMafiaTab = myRole === "MAFYA" || myRole === "AJAN" || phase === "ended"
+  const showDeadTab = !isAlive || myRole === "MEDYUM" || phase === "ended"
 
   // Seçili kanala göre mesaj gönderilebilir mi?
   const canSendMessageInCurrentChannel = canUsePublicChat || canUseMafiaChat || canUseDeadChat
