@@ -62,6 +62,7 @@ export class GameEngine {
   private onGameEnd: ((winner: WinnerTeam, players: Player[]) => void) | null = null
   private onTimerTick: ((seconds: number) => void) | null = null
   private onGameLog: ((entry: GameLogEntry) => void) | null = null
+  private nightGraceUsed: boolean = false
 
   constructor(roomId: string, roomCode: string, hostId: string, players: Player[]) {
     this.state = {
@@ -175,6 +176,7 @@ export class GameEngine {
     switch (phase) {
       case "night":
         this.state.timer = DURATIONS.night
+        this.nightGraceUsed = false
         this.addLog(`Gece ${this.state.dayCount} basladi. Kasaba uyuyor...`, "phase")
         break
 
@@ -228,6 +230,27 @@ export class GameEngine {
 
     switch (this.state.phase) {
       case "night":
+        // Eğer tüm aksiyonlar gelmediyse ve henüz grace kullanılmadıysa,
+        // bağlı ve gerçek oyuncular için kısa bir ek süre verelim.
+        if (!this.allNightActionsReceived()) {
+          // Eksik aksiyon yapan oyuncular
+          const actionPlayers = this.getAlivePlayers().filter((p) => p.role !== "VATANDAS" && p.role !== "MEDYUM" && p.role !== "BASKAN" && p.role !== "GARDIYAN")
+          const missing = actionPlayers.filter((p) => !this.state.nightActions.some((a) => a.playerId === p.id))
+
+          const hasConnectedRealMissing = missing.some((p) => !p.isBot && (p.isConnected ?? true))
+
+          if (hasConnectedRealMissing && !this.nightGraceUsed) {
+            // Bir kez olmak üzere ek süre ver
+            const GRACE = 15
+            this.nightGraceUsed = true
+            this.state.timer = GRACE
+            this.addLog("Bazı oyuncular henüz aksiyon yapmadı — gece için kısa bir süre uzatıldı.", "system")
+            this.emitStateChange()
+            this.startTimer()
+            return
+          }
+        }
+
         this.resolveNight()
         break
 
@@ -255,12 +278,16 @@ export class GameEngine {
     // Zaten aksiyon yapmis mi?
     const existing = this.state.nightActions.findIndex((a) => a.playerId === playerId)
     if (existing >= 0) {
-      this.state.nightActions[existing] = { playerId, role: player.role, targetId }
+      if (this.state.nightActions[existing].targetId === targetId) {
+        // Aynı kişiye tekrar tıklarsa aksiyonu iptal et
+        this.state.nightActions.splice(existing, 1)
+      } else {
+        this.state.nightActions[existing] = { playerId, role: player.role, targetId }
+      }
     } else {
       this.state.nightActions.push({ playerId, role: player.role, targetId })
     }
 
-    // Tum aksiyonlar geldi mi kontrol et
     if (this.allNightActionsReceived()) {
       this.resolveNight()
     }
@@ -421,19 +448,42 @@ export class GameEngine {
       if (!target || !target.isAlive) return false
     }
 
-    // Mevcut oyu guncelle veya ekle
-    const existing = this.state.votes.findIndex((v) => v.voterId === voterId)
-    if (existing >= 0) {
-      this.state.votes[existing] = { voterId, targetId }
+    const MAX_VOTES = voter.role === "BASKAN" ? 2 : 1
+
+    // Kullanıcının mevcut oyları (targetId null değilse)
+    const userVotes = this.state.votes.filter(v => v.voterId === voterId && v.targetId !== null)
+
+    if (targetId === null) {
+      // Oyları temizleme veya pas geçme isteği (opsiyonel)
+      this.state.votes = this.state.votes.filter(v => v.voterId !== voterId)
     } else {
-      this.state.votes.push({ voterId, targetId })
+      // Aynı kişiye tıklandıysa, oyu geri çek (toggle on/off yeteneği)
+      const existingVoteIndex = this.state.votes.findIndex(v => v.voterId === voterId && v.targetId === targetId)
+      if (existingVoteIndex >= 0) {
+        this.state.votes.splice(existingVoteIndex, 1)
+      } else {
+        // Yeni kişiye oy verildi.
+        if (userVotes.length >= MAX_VOTES) {
+          // 2'den fazla oy veremez, en eski oyunu bul ve onun yerine yaz (veya ilk verdiğini silip ekle)
+          const oldestVoteIndex = this.state.votes.findIndex(v => v.voterId === voterId && v.targetId !== null)
+          if (oldestVoteIndex >= 0) {
+            this.state.votes.splice(oldestVoteIndex, 1)
+          }
+        }
+        // Yeni oyu ekle
+        this.state.votes.push({ voterId, targetId })
+      }
     }
 
     this.emitStateChange()
 
-    // Tum oylar geldi mi?
-    const aliveCount = this.getAlivePlayers().length
-    if (this.state.votes.length >= aliveCount) {
+    // Tum oylar geldi mi? Maximum oy hesabı
+    const isEveryoneVotedMax = this.getAlivePlayers().every(p => {
+      const pMaxVotes = p.role === "BASKAN" ? 2 : 1
+      return this.state.votes.filter(v => v.voterId === p.id).length === pMaxVotes
+    })
+    
+    if (isEveryoneVotedMax) {
       this.resolveVoting()
     }
 

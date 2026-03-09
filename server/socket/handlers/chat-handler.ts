@@ -32,47 +32,49 @@ export function registerChatHandlers(io: TypedServer, socket: TypedSocket): void
 
       const engine = getGameEngine(socketData.roomId)
 
-      // Oyuncu hayatta mi kontrol et
+      // Faz ve yetki kontrolü
       if (engine) {
-        const isAlive = engine.isPlayerAlive(socketData.playerId)
+        const state = engine.getState()
+        
+        // Oyun bitmişse hiçbir rol/yaşam kısıtlaması uygulama
+        if (state.phase !== "ended") {
+          const isAlive = engine.isPlayerAlive(socketData.playerId)
+          const playerRole = engine.getPlayerRole(socketData.playerId)
 
-        const playerRole = engine.getPlayerRole(socketData.playerId)
-
-        if (!isAlive) {
-          if (channel !== "DEAD") {
-            socket.emit("error", { message: "Ölü oyuncular sadece Ölüler kanalında konuşabilir" })
-            return
-          }
-        } else {
-          // Yaşayan oyuncu
-          if (channel === "DEAD") {
-            if (playerRole !== "MEDYUM") {
-              socket.emit("error", { message: "Sadece Medyum ölülerle konuşabilir" })
+          if (!isAlive) {
+            if (channel !== "DEAD") {
+              socket.emit("error", { message: "Ölü oyuncular sadece Ölüler kanalında konuşabilir" })
               return
             }
-          }
-
-          const state = engine.getState()
-
-          // Faz kontrolleri
-          if (state.phase === "night") {
-            // Gece sadece mafya kendi aralarinda konusabilir (veya Medyum ölülerle konuşabilir)
-            if (channel !== "MAFIA" && channel !== "DEAD") {
-              socket.emit("error", { message: "Gece sadece mafya chati veya ölüler chati kullanilabilir" })
-              return
+          } else {
+            // Yaşayan oyuncu
+            if (channel === "DEAD") {
+              if (playerRole !== "MEDYUM") {
+                socket.emit("error", { message: "Sadece Medyum ölülerle konuşabilir" })
+                return
+              }
             }
 
-            if (channel === "MAFIA" && playerRole !== "MAFYA" && playerRole !== "AJAN") {
-              socket.emit("error", { message: "Sadece mafya uyeleri mafya chatini kullanabilir" })
-              return
-            }
-          }
+            // Faz kontrolleri
+            if (state.phase === "night") {
+              // Gece sadece mafya kendi aralarinda konusabilir (veya Medyum ölülerle konuşabilir)
+              if (channel !== "MAFIA" && channel !== "DEAD") {
+                socket.emit("error", { message: "Gece sadece mafya chati veya ölüler chati kullanilabilir" })
+                return
+              }
 
-          if (state.phase === "day_discussion" || state.phase === "day_voting") {
-            // Gunduz herkes PUBLIC kanalda konusabilir (Veya Medyum ölülerle)
-            if (channel === "MAFIA") {
-              socket.emit("error", { message: "Gunduz mafya chati kullanilamaz" })
-              return
+              if (channel === "MAFIA" && playerRole !== "MAFYA" && playerRole !== "AJAN") {
+                socket.emit("error", { message: "Sadece mafya uyeleri mafya chatini kullanabilir" })
+                return
+              }
+            }
+
+            if (state.phase === "day_discussion" || state.phase === "day_voting") {
+              // Gunduz herkes PUBLIC kanalda konusabilir (Veya Medyum ölülerle)
+              if (channel === "MAFIA") {
+                socket.emit("error", { message: "Gunduz mafya chati kullanilamaz" })
+                return
+              }
             }
           }
         }
@@ -99,7 +101,12 @@ export function registerChatHandlers(io: TypedServer, socket: TypedSocket): void
       })
 
       // Mesaji gonder
-      if (channel === "MAFIA") {
+      const isGameEnded = engine ? engine.getState().phase === "ended" : false
+
+      if (isGameEnded) {
+        // Oyun bitmişse hangi kanal olursa olsun herkese gönder
+        io.to(socketData.roomId).emit("chat:message", chatMessage)
+      } else if (channel === "MAFIA") {
         // Sadece mafya uyelerine gonder
         if (engine) {
           const mafiaPlayers = engine.getMafiaPlayers()
