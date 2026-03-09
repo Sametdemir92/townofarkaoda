@@ -14,6 +14,7 @@ import { ChatPaneli } from "./chat-paneli"
 import { GeceAksiyon } from "./gece-aksiyon"
 import { OylamaPaneli } from "./oylama-paneli"
 import { OyunLog } from "./oyun-log"
+import { RoleRevealAnimasyonu } from "./role-reveal-animasyonu"
 import { SonucEkrani } from "@/components/oyun-sonu/sonuc-ekrani"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -251,10 +252,16 @@ export function OyunTahtasi({ roomId, roomCode, roomName, currentUserId, isHost 
         ? "phase-voting"
         : gameState.phase.startsWith("day")
           ? "phase-day"
-          : ""
+          : gameState.phase === "role_reveal"
+            ? "phase-role-reveal"
+            : ""
 
   return (
     <div className={`min-h-screen transition-all duration-1000 ${phaseClass} ${!phaseClass ? "bg-gradient-to-br from-gray-100 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900" : ""}`}>
+      {gameState.phase === "role_reveal" && (
+        <RoleRevealAnimasyonu myRole={myRole} />
+      )}
+
       {/* Header */}
       <header className="border-b border-gray-200 dark:border-gray-700/50 backdrop-blur-sm bg-white/50 dark:bg-black/20 p-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between">

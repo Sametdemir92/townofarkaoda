@@ -2,7 +2,7 @@
 // Town of Arkaoda - Oyun Tipleri
 // ============================================
 
-export type GamePhase = "lobby" | "night" | "day_discussion" | "day_voting" | "ended"
+export type GamePhase = "lobby" | "role_reveal" | "night" | "day_discussion" | "day_voting" | "ended"
 
 export type RoleName = "MAFYA" | "DOKTOR" | "DEDEKTIF" | "VATANDAS" | "MEDYUM" | "BASKAN" | "AJAN" | "GARDIYAN"
 
@@ -168,6 +168,7 @@ export const ROLE_DEFINITIONS: Record<RoleName, RoleDefinition> = {
 // ---- Timer Sureler (saniye) ----
 
 export const PHASE_DURATIONS: Record<string, number> = {
+  role_reveal: 8,
   night: 30,
   day_discussion: 60,
   day_voting: 30,

@@ -45,6 +45,7 @@ export function removeGameEngine(roomId: string): void {
 // ---- Timer Sureleri ----
 
 const DURATIONS = {
+  role_reveal: 8,
   night: 30,
   day_discussion: 60,
   day_voting: 30,
@@ -156,8 +157,8 @@ export class GameEngine {
 
     this.addLog("Oyun basladi! Roller atandi.", "system")
 
-    // Gece fazina gec
-    this.transitionTo("night")
+    // Rol gösterimi fazına geç
+    this.transitionTo("role_reveal")
 
     return true
   }
@@ -174,6 +175,11 @@ export class GameEngine {
     this.state.eliminatedToday = null
 
     switch (phase) {
+      case "role_reveal":
+        this.state.timer = DURATIONS.role_reveal
+        // Log eklemeye gerek yok, frontend kendi animasyonunu gosterecek.
+        break
+
       case "night":
         this.state.timer = DURATIONS.night
         this.nightGraceUsed = false
@@ -229,6 +235,10 @@ export class GameEngine {
     this.stopTimer()
 
     switch (this.state.phase) {
+      case "role_reveal":
+        this.transitionTo("night")
+        break
+
       case "night":
         // Eğer tüm aksiyonlar gelmediyse ve henüz grace kullanılmadıysa,
         // bağlı ve gerçek oyuncular için kısa bir ek süre verelim.

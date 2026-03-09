@@ -287,11 +287,11 @@ ${context === "chat_reply" ? `Şu an "${lastMessageAuthor}" isimli oyuncu sana v
 Ölü olanlar: ${deadPlayers || "Yok"}.
 
 Kurallar:
-1. Türkçe konuş.
+1. Türkçe konuş. Arada sokak ağzı, kinaye veya argo kullanabilirsin, dümdüz veya sıkıcı olma. Karakterinin bir tarzı olsun.
 2. Kesinlikle AI asistan gibi cevap verme (Örn: "Merhaba, size nasıl yardımcı olabilirim", "Tabii ki" vb. deme).
 3. Sadece ve sadece söyleyeceğin oyuniçi cümleyi yaz. Tırnak işaretleri, ön ekler kullanma.
-4. Mesajın doğal, kısa ve bir sohbette yazılabilecek gibi olsun (1 veya 2 cümle maksimum).
-5. Eğer suçluyorsan yaşayanlardan gerçek bir oyuncunun ismini kullan.
+4. Mesajın son derece doğal, kısa, oyuncular arasında dönen rekabetçi bir sohbette yazılabilecek gibi olsun (1 veya 2 kısa cümle). Özgün ve şaşırtıcı cevaplar ver.
+5. Eğer suçluyorsan veya birisine bir şey söylüyorsan yaşayanlardan gerçek bir oyuncunun ismini kullan.
 Lütfen sadece chate yazılacak mesajı ver:
       `.trim()
 
@@ -361,7 +361,7 @@ export function getBotActionDelay(): number {
 }
 
 export function getBotChatDelay(): number {
-  return randomDelay(3000, 10000) // 3-10 saniye
+  return randomDelay(1000, 3000) // 1-3 saniye (daha hızlı cevap)
 }
 
 export function getBotVoteDelay(): number {

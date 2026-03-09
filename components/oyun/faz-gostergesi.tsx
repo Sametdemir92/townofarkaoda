@@ -18,6 +18,12 @@ const phaseConfig: Record<
     color: "text-gray-600 dark:text-gray-400",
     bg: "bg-gray-100 dark:bg-gray-800",
   },
+  role_reveal: {
+    label: "Roller Gösteriliyor",
+    icon: Sun, // veya isterseniz role özel bir icon
+    color: "text-purple-600 dark:text-purple-400",
+    bg: "bg-purple-50 dark:bg-purple-900/30",
+  },
   night: {
     label: "Gece",
     icon: Moon,
