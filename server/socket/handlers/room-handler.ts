@@ -34,8 +34,20 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
         return
       }
 
+      // Oyuncu zaten odada mi?
+      let player = room.players.find((p: any) => p.userId === socketData.userId)
+
+      // Oda PLAYING/ENDED durumundaysa sadece zaten odada olan oyuncular yeniden baglanabilir
       if (room.status !== "WAITING") {
-        socket.emit("room:error", { message: "Oyun zaten baslamis" })
+        if (!player) {
+          socket.emit("room:error", { message: "Oyun zaten baslamis" })
+          return
+        }
+        // Zaten odadaki oyuncu yeniden baglaniyor (reconnect)
+        socketData.roomId = room.id
+        socketData.playerId = player.id
+        socket.join(room.id)
+        await emitRoomPlayers(io, room.id)
         return
       }
 
@@ -46,9 +58,6 @@ export function registerRoomHandlers(io: TypedServer, socket: TypedSocket): void
         socket.emit("room:error", { message: "Oda dolu" })
         return
       }
-
-      // Oyuncu zaten odada mi?
-      let player = room.players.find((p: any) => p.userId === socketData.userId)
 
       if (!player) {
         player = await prisma.player.create({

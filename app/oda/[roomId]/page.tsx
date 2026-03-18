@@ -150,7 +150,8 @@ export default function OdaPage() {
       resetGameStore()
       clearMessages()
     }
-  }, [userId, username, roomData?.id, gameStarted])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, username, roomData?.id])
 
   // ---- Oyunu Baslat ----
   const handleStartGame = useCallback(() => {
