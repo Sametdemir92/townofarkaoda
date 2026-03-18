@@ -44,7 +44,7 @@ export function ChatPaneli({
   }
 
   // Lobby fazında herkes PUBLIC kanalında chat yapabilir
-  const canChat = phase === "ended" || phase === "lobby" || (isAlive && phase !== "lobby") || (!isAlive && activeChannel === "DEAD") || (isAlive && myRole === "MEDYUM" && activeChannel === "DEAD")
+  const canChat = phase === "ended" || phase === "lobby" || isAlive || (!isAlive && activeChannel === "DEAD") || (isAlive && myRole === "MEDYUM" && activeChannel === "DEAD")
   const canUseMafiaChat = (myRole === "MAFYA" || myRole === "AJAN") && phase === "night" && activeChannel === "MAFIA"
   const canUsePublicChat = phase === "ended" || phase === "lobby" || (isAlive && phase !== "night" && activeChannel === "PUBLIC")
   const canUseDeadChat = phase === "ended" || (!isAlive && activeChannel === "DEAD") || (isAlive && myRole === "MEDYUM" && activeChannel === "DEAD")
