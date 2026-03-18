@@ -14,11 +14,12 @@ datasource db {
 // ---- Kullanici ----
 
 model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  players   Player[]
+  id          String   @id @default(cuid())
+  username    String   @unique
+  password    String
+  createdAt   DateTime @default(now())
+  players     Player[]
+  hostedRooms Room[]   @relation("RoomHost")
 }
 
 // ---- Oda ----
@@ -26,8 +27,9 @@ model User {
 model Room {
   id         String     @id @default(cuid())
   code       String     @unique
-  name       String?    // Added room name
+  name       String? // Added room name
   hostId     String
+  host       User       @relation("RoomHost", fields: [hostId], references: [id], onDelete: Cascade)
   status     RoomStatus @default(WAITING)
   minPlayers Int        @default(3)
   maxPlayers Int        @default(10)
@@ -41,13 +43,13 @@ model Room {
 // ---- Oyuncu (bir odadaki kullanici) ----
 
 model Player {
-  id       String   @id @default(cuid())
+  id       String    @id @default(cuid())
   userId   String
   roomId   String
   role     Role?
-  isAlive  Boolean  @default(true)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  room     Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  isAlive  Boolean   @default(true)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room     Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
   messages Message[]
 
   @@unique([userId, roomId])

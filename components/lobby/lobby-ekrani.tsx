@@ -58,6 +58,12 @@ export function LobbyEkrani({
   const canStart = players.length >= 3
   const botCount = players.filter((p) => p.isBot).length
   const realCount = players.filter((p) => !p.isBot).length
+  const [isStarting, setIsStarting] = useState(false)
+
+  const handleStartGame = () => {
+    setIsStarting(true)
+    onStartGame()
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 transition-colors">
@@ -203,12 +209,12 @@ export function LobbyEkrani({
 
                 {/* Oyunu Baslat */}
                 <Button
-                  className="w-full bg-green-600 hover:bg-green-700 h-12 text-lg text-white"
-                  onClick={onStartGame}
-                  disabled={!canStart}
+                  className="w-full bg-green-600 hover:bg-green-700 h-12 text-lg text-white disabled:opacity-50"
+                  onClick={handleStartGame}
+                  disabled={!canStart || isStarting}
                 >
                   <Play className="h-5 w-5 mr-2" />
-                  {canStart
+                  {isStarting ? "Baslatiliyor..." : canStart
                     ? `Oyunu Baslat (${players.length} oyuncu)`
                     : `En az 3 oyuncu gerekli (${players.length}/3)`}
                 </Button>
