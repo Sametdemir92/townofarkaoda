@@ -30,6 +30,8 @@ export function GeceAksiyon({
 }: GeceAksiyonProps) {
   const roleInfo = ROLE_DEFINITIONS[myRole]
   const isVatandas = myRole === "VATANDAS"
+  const isBaskan = myRole === "BASKAN"
+  const hasNoNightAction = isVatandas || isBaskan
   const alivePlayers = players.filter((p) => p.isAlive && p.id !== myPlayerId)
 
   // Mafya kendi takim arkadasini hedef alamaz
@@ -69,15 +71,15 @@ export function GeceAksiyon({
           </div>
         )}
 
-        {/* Vatandas */}
-        {isVatandas && (
+        {/* Vatandas ve Baskan - gece aksiyonu yok */}
+        {hasNoNightAction && (
           <div className="text-center text-gray-600 dark:text-gray-500 py-4">
-            Gece yapabilcegin bir aksiyon yok. Sabahi bekle...
+            {isBaskan ? "Başkan olarak gece yapabileceğin bir aksiyon yok. Oylamada 2 oy hakkın var!" : "Gece yapabileceğin bir aksiyon yok. Sabahı bekle..."}
           </div>
         )}
 
         {/* Aksiyonu olan roller */}
-        {!isVatandas && !hasSubmitted && (
+        {!hasNoNightAction && !hasSubmitted && (
           <div className="space-y-2">
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
               {myRole === "MAFYA" && "Kimi oldureceginizi secin:"}
@@ -112,7 +114,7 @@ export function GeceAksiyon({
         )}
 
         {/* Gonderildikten sonra */}
-        {hasSubmitted && !isVatandas && (
+        {hasSubmitted && !hasNoNightAction && (
           <div className="flex items-center gap-2 text-green-600 dark:text-green-400 justify-center py-4 font-medium">
             <CheckCircle className="h-5 w-5" />
             <span>Aksiyonun gonderildi. Sabahi bekliyorsun...</span>

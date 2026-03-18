@@ -8,6 +8,7 @@ import { useGameStore } from "@/lib/store/game-store"
 import { useChatStore } from "@/lib/store/chat-store"
 import { LobbyEkrani } from "@/components/lobby/lobby-ekrani"
 import { OyunTahtasi } from "@/components/oyun/oyun-tahtasi"
+import type { ChatMessage, ChatChannel } from "@/types/game"
 
 interface RoomData {
   id: string
@@ -37,6 +38,7 @@ export default function OdaPage() {
   const [isConnected, setIsConnected] = useState(false)
   const [error, setError] = useState("")
   const [gameStarted, setGameStarted] = useState(false)
+  const [lobbyMessages, setLobbyMessages] = useState<ChatMessage[]>([])
 
   const { gameState, reset: resetGameStore } = useGameStore()
   const { clearMessages } = useChatStore()
@@ -128,6 +130,13 @@ export default function OdaPage() {
       setGameStarted(true)
     })
 
+    // Chat mesaji (lobby icin)
+    socket.on("chat:message", (msg: ChatMessage) => {
+      if (!gameStarted) {
+        setLobbyMessages(prev => [...prev, msg])
+      }
+    })
+
     return () => {
       socket.off("connect")
       socket.off("disconnect")
@@ -136,11 +145,12 @@ export default function OdaPage() {
       socket.off("room:closed")
       socket.off("game:state-update")
       socket.off("game:phase-change")
+      socket.off("chat:message")
       disconnectSocket()
       resetGameStore()
       clearMessages()
     }
-  }, [userId, username, roomData?.id])
+  }, [userId, username, roomData?.id, gameStarted])
 
   // ---- Oyunu Baslat ----
   const handleStartGame = useCallback(() => {
@@ -165,6 +175,18 @@ export default function OdaPage() {
       socket.emit("room:remove-bot", { roomId, botId })
     }
   }, [roomId])
+
+  // ---- Lobby'da mesaj gonder ----
+  const handleLobbySendMessage = useCallback(
+    (message: string, channel: ChatChannel) => {
+      if (channel !== "PUBLIC") return // Lobby'da sadece PUBLIC kanal
+      const socket = getSocket()
+      if (socket.connected) {
+        socket.emit("chat:send", { message, channel })
+      }
+    },
+    []
+  )
 
   // ---- Loading / Error States ----
 
@@ -226,6 +248,8 @@ export default function OdaPage() {
       onStartGame={handleStartGame}
       onAddBot={handleAddBot}
       onRemoveBot={handleRemoveBot}
+      onSendMessage={handleLobbySendMessage}
+      messages={lobbyMessages}
     />
   )
 }

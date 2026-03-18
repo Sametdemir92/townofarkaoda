@@ -43,12 +43,13 @@ export function ChatPaneli({
     setInputValue("")
   }
 
-  const canChat = phase === "ended" || (isAlive && phase !== "lobby") || (!isAlive && activeChannel === "DEAD") || (isAlive && myRole === "MEDYUM" && activeChannel === "DEAD")
+  // Lobby fazında herkes PUBLIC kanalında chat yapabilir
+  const canChat = phase === "ended" || phase === "lobby" || (isAlive && phase !== "lobby") || (!isAlive && activeChannel === "DEAD") || (isAlive && myRole === "MEDYUM" && activeChannel === "DEAD")
   const canUseMafiaChat = (myRole === "MAFYA" || myRole === "AJAN") && phase === "night" && activeChannel === "MAFIA"
-  const canUsePublicChat = phase === "ended" || (isAlive && phase !== "night" && activeChannel === "PUBLIC")
+  const canUsePublicChat = phase === "ended" || phase === "lobby" || (isAlive && phase !== "night" && activeChannel === "PUBLIC")
   const canUseDeadChat = phase === "ended" || (!isAlive && activeChannel === "DEAD") || (isAlive && myRole === "MEDYUM" && activeChannel === "DEAD")
 
-  const showMafiaTab = myRole === "MAFYA" || myRole === "AJAN" || phase === "ended"
+  const showMafiaTab = (myRole === "MAFYA" || myRole === "AJAN") && (phase === "night" || phase === "ended")
   const showDeadTab = !isAlive || myRole === "MEDYUM" || phase === "ended"
 
   // Seçili kanala göre mesaj gönderilebilir mi?
@@ -146,7 +147,7 @@ export function ChatPaneli({
               placeholder={
                 !canSendMessageInCurrentChannel
                   ? "Bu kanalda şu an yazamazsın..."
-                  : `Mesaj yaz...`
+                  : phase === "lobby" ? "Lobby'da mesaj gönder..." : `Mesaj yaz...`
               }
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}

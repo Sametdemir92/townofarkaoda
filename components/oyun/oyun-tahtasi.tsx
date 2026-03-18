@@ -364,6 +364,7 @@ export function OyunTahtasi({ roomId, roomCode, roomName, currentUserId, isHost 
                 players={gameState.players}
                 votes={gameState.votes}
                 myPlayerId={myPlayerId || ""}
+                myRole={myRole}
                 myVote={myVote}
                 onVote={handleVote}
                 isAlive={isAlive}

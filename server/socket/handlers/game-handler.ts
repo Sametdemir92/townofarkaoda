@@ -79,11 +79,16 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket): void
         return
       }
 
-      // Oda durumunu guncelle
-      await prisma.room.update({
-        where: { id: roomId },
+      // Oda durumunu guncelle - Double-check status to prevent race conditions
+      const updatedRoom = await prisma.room.updateMany({
+        where: { id: roomId, status: "WAITING" },
         data: { status: "PLAYING" },
       })
+
+      if (updatedRoom.count === 0) {
+        socket.emit("error", { message: "Oyun zaten baslamis" })
+        return
+      }
 
       // Oyun motorunu olustur
       const engine = createGameEngine(roomId, room.code, room.hostId, allPlayers)
@@ -298,6 +303,10 @@ function scheduleBotChat(
       // Faz hala dogru mu kontrol et
       if (context === "mafia_night" && currentState.phase !== "night") return
       if (context !== "mafia_night" && !currentState.phase.startsWith("day")) return
+
+      // Bot hala hayatta mi kontrol et
+      const botStillAlive = currentState.players.find(p => p.id === bot.id && p.isAlive)
+      if (!botStillAlive) return
 
       const message = await generateBotMessage(bot, currentState.players, channel, context)
       if (message) {
