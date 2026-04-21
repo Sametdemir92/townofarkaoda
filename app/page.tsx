@@ -18,6 +18,26 @@ interface Room {
   createdAt: string
 }
 
+// Sis parçacıkları oluşturucu
+function FogParticles() {
+  return (
+    <div className="home-fog">
+      <div
+        className="home-fog-layer animate-drift"
+        style={{ top: "10%", animationDuration: "25s" }}
+      />
+      <div
+        className="home-fog-layer animate-drift-reverse"
+        style={{ top: "40%", animationDuration: "30s", opacity: 0.02 }}
+      />
+      <div
+        className="home-fog-layer animate-drift"
+        style={{ top: "70%", animationDuration: "35s", opacity: 0.015 }}
+      />
+    </div>
+  )
+}
+
 export default function HomePage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -27,6 +47,11 @@ export default function HomePage() {
   const [error, setError] = useState("")
   const [openRooms, setOpenRooms] = useState<Room[]>([])
   const [isLoadingRooms, setIsLoadingRooms] = useState(true)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const fetchRooms = async () => {
     try {
@@ -96,12 +121,15 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col transition-colors">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col transition-colors relative overflow-hidden">
+      {/* Sis Parçacıkları */}
+      <FogParticles />
+
       {/* Header */}
-      <header className="border-b border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-transparent backdrop-blur-sm p-4">
+      <header className="relative z-10 border-b border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-transparent backdrop-blur-sm p-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Swords className="h-6 w-6 text-red-600 dark:text-red-500" />
+            <Swords className="h-6 w-6 text-red-600 dark:text-red-500 animate-flicker" />
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">Town of Arkaoda</h1>
           </div>
           <div className="flex items-center gap-4">
@@ -118,22 +146,25 @@ export default function HomePage() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="relative z-10 flex-1 flex items-center justify-center p-4">
         <div className="max-w-4xl w-full space-y-6">
           {/* Title */}
-          <div className="text-center space-y-2">
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white">
+          <div className={`text-center space-y-2 ${mounted ? "animate-rise-up" : "opacity-0"}`}>
+            <h2
+              className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white title-glitch"
+              data-text="Town of Arkaoda"
+            >
               Town of Arkaoda
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-lg">
+            <p className="text-gray-600 dark:text-gray-400 text-lg animate-fade-in-slow">
               Kasabada bir katil var... Onu bulabilecek misin?
             </p>
           </div>
 
           {/* Actions */}
-          <div className="grid md:grid-cols-1 gap-4">
+          <div className={`grid md:grid-cols-1 gap-4 ${mounted ? "animate-slide-up-slow" : "opacity-0"}`} style={{ animationDelay: "0.2s" }}>
             {/* Oda Olustur */}
-            <Card className="bg-white/80 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:border-blue-500/50 transition-colors">
+            <Card className="bg-white/80 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
                   <Plus className="h-5 w-5 text-blue-500 dark:text-blue-400" />
@@ -153,7 +184,7 @@ export default function HomePage() {
                   className="bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white text-center text-lg"
                 />
                 <Button
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 hover:shadow-lg hover:shadow-blue-600/30"
                   onClick={handleCreateRoom}
                   disabled={isCreating}
                 >
@@ -165,16 +196,16 @@ export default function HomePage() {
 
           {/* Error */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-center text-red-600 dark:text-red-400 text-sm animate-fade-in">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-center text-red-600 dark:text-red-400 text-sm animate-shake">
               {error}
             </div>
           )}
 
           {/* Acik Odalar Listesi */}
-          <Card className="bg-white/80 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700">
+          <Card className={`bg-white/80 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 ${mounted ? "animate-rise-up" : "opacity-0"}`} style={{ animationDelay: "0.4s" }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
-                <List className="h-5 w-5 text-yellow-500 dark:text-yellow-400" />
+                <List className="h-5 w-5 text-yellow-500 dark:text-yellow-400 animate-float" />
                 Acik Odalar
               </CardTitle>
               <CardDescription>
@@ -183,8 +214,13 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               {isLoadingRooms ? (
-                <div className="text-center text-gray-500 dark:text-gray-400 py-4 animate-pulse">
-                  Odalar yukleniyor...
+                <div className="text-center text-gray-500 dark:text-gray-400 py-4">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </div>
+                  <p className="mt-2">Odalar yukleniyor...</p>
                 </div>
               ) : openRooms.length === 0 ? (
                 <div className="text-center text-gray-600 dark:text-gray-500 py-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -193,10 +229,11 @@ export default function HomePage() {
                 </div>
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {openRooms.map((room) => (
+                  {openRooms.map((room, index) => (
                     <div
                       key={room.id}
-                      className="bg-gray-50 dark:bg-gray-700/40 hover:bg-gray-100 dark:hover:bg-gray-700/60 transition-colors border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex flex-col justify-between"
+                      className="stagger-item bg-gray-50 dark:bg-gray-700/40 hover:bg-gray-100 dark:hover:bg-gray-700/60 transition-all duration-300 border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5"
+                      style={{ animationDelay: `${index * 100}ms` }}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div className="space-y-1">
@@ -216,7 +253,7 @@ export default function HomePage() {
                       <Button
                         size="sm"
                         variant="default"
-                        className="w-full mt-2 bg-green-600 hover:bg-green-700 text-xs text-white"
+                        className="w-full mt-2 bg-green-600 hover:bg-green-700 text-xs text-white transition-all duration-300 hover:shadow-lg hover:shadow-green-600/20"
                         onClick={() => handleJoinRoom(room.id)}
                         disabled={isJoining || room.playerCount >= room.maxPlayers}
                       >
@@ -230,7 +267,7 @@ export default function HomePage() {
           </Card>
 
           {/* Roller Bilgi */}
-          <Card className="bg-white/60 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700">
+          <Card className={`bg-white/60 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700 ${mounted ? "animate-rise-up" : "opacity-0"}`} style={{ animationDelay: "0.6s" }}>
             <CardHeader>
               <CardTitle className="text-gray-900 dark:text-white text-lg flex items-center gap-2">
                 <Users className="h-5 w-5" />
@@ -240,20 +277,23 @@ export default function HomePage() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { name: "Mafya", emoji: "🔪", desc: "Geceleri oldurur", color: "text-red-500 dark:text-red-400" },
-                  { name: "Doktor", emoji: "💊", desc: "Geceleri korur", color: "text-green-500 dark:text-green-400" },
-                  { name: "Dedektif", emoji: "🔍", desc: "Geceleri sorusturur", color: "text-blue-500 dark:text-blue-400" },
-                  { name: "Medyum", emoji: "🔮", desc: "Ölülerle konuşur", color: "text-purple-500 dark:text-purple-400" },
-                  { name: "Başkan", emoji: "👑", desc: "Ölürse mafya kazanır", color: "text-yellow-500 dark:text-yellow-400" },
-                  { name: "Ajan", emoji: "🕵️", desc: "Gece rol öğrenir", color: "text-rose-500 dark:text-rose-400" },
-                  { name: "Gardiyan", emoji: "🛡️", desc: "Gece aksiyonu engeller", color: "text-cyan-500 dark:text-cyan-400" },
-                  { name: "Vatandas", emoji: "👤", desc: "Oylama gucu", color: "text-gray-500 dark:text-gray-400" },
-                ].map((role) => (
+                  { name: "Mafya", emoji: "🔪", desc: "Geceleri oldurur", color: "text-red-500 dark:text-red-400", glow: "hover:shadow-[0_0_20px_rgba(239,68,68,0.3)]" },
+                  { name: "Doktor", emoji: "💊", desc: "Geceleri korur", color: "text-green-500 dark:text-green-400", glow: "hover:shadow-[0_0_20px_rgba(34,197,94,0.3)]" },
+                  { name: "Dedektif", emoji: "🔍", desc: "Geceleri sorusturur", color: "text-blue-500 dark:text-blue-400", glow: "hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]" },
+                  { name: "Medyum", emoji: "🔮", desc: "Ölülerle konuşur", color: "text-purple-500 dark:text-purple-400", glow: "hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]" },
+                  { name: "Başkan", emoji: "👑", desc: "Ölürse mafya kazanır", color: "text-yellow-500 dark:text-yellow-400", glow: "hover:shadow-[0_0_20px_rgba(234,179,8,0.3)]" },
+                  { name: "Ajan", emoji: "🕵️", desc: "Gece rol öğrenir", color: "text-rose-500 dark:text-rose-400", glow: "hover:shadow-[0_0_20px_rgba(244,63,94,0.3)]" },
+                  { name: "Gardiyan", emoji: "🛡️", desc: "Gece aksiyonu engeller", color: "text-cyan-500 dark:text-cyan-400", glow: "hover:shadow-[0_0_20px_rgba(6,182,212,0.3)]" },
+                  { name: "Vatandas", emoji: "👤", desc: "Oylama gucu", color: "text-gray-500 dark:text-gray-400", glow: "hover:shadow-[0_0_20px_rgba(156,163,175,0.3)]" },
+                ].map((role, index) => (
                   <div
                     key={role.name}
-                    className="bg-white/50 dark:bg-gray-700/30 rounded-lg p-3 text-center space-y-1 shadow-sm border border-gray-100 dark:border-transparent"
+                    className={`stagger-item bg-white/50 dark:bg-gray-700/30 rounded-lg p-3 text-center space-y-1 shadow-sm border border-gray-100 dark:border-transparent transition-all duration-300 hover:-translate-y-1 cursor-default ${role.glow}`}
+                    style={{ animationDelay: `${800 + index * 80}ms` }}
                   >
-                    <div className="text-2xl">{role.emoji}</div>
+                    <div className="text-2xl animate-float" style={{ animationDelay: `${index * 200}ms`, animationDuration: `${3 + index * 0.3}s` }}>
+                      {role.emoji}
+                    </div>
                     <div className={`font-medium ${role.color}`}>{role.name}</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">{role.desc}</div>
                   </div>

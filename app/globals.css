@@ -58,23 +58,389 @@
   }
 }
 
-/* Oyun ozel stilleri */
+/* ============================================
+   TOWN OF SALEM - OYUN FİZİKSEL STİLLERİ
+   ============================================ */
+
+/* --- Faz Arka Planları --- */
 .phase-night {
-  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-  transition: background 1s ease-in-out;
+  background: linear-gradient(135deg, #0a0a1a 0%, #0f0f23 30%, #1a1a2e 60%, #0f172a 100%);
+  transition: background 1.5s ease-in-out;
 }
 
 .phase-day {
   background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #1e293b 100%);
-  transition: background 1s ease-in-out;
+  transition: background 1.5s ease-in-out;
 }
 
 .phase-voting {
   background: linear-gradient(135deg, #451a03 0%, #78350f 50%, #451a03 100%);
-  transition: background 1s ease-in-out;
+  transition: background 1.5s ease-in-out;
 }
 
-/* Mesaj animasyonu */
+.phase-role-reveal {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+  transition: background 1.5s ease-in-out;
+}
+
+/* --- Faz Geçiş Overlay --- */
+.phase-transition-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  animation: phaseOverlayIn 0.8s ease-out forwards;
+}
+
+.phase-transition-overlay.exiting {
+  animation: phaseOverlayOut 0.8s ease-in forwards;
+}
+
+@keyframes phaseOverlayIn {
+  0% { opacity: 0; transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes phaseOverlayOut {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.95); }
+}
+
+/* --- Gece Yıldızları --- */
+.stars-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle var(--duration, 3s) ease-in-out infinite;
+  opacity: 0;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.5); }
+}
+
+/* --- Ay Animasyonu --- */
+.moon {
+  position: absolute;
+  top: 10%;
+  right: 15%;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fef9c3, #fde68a, #fbbf24);
+  box-shadow: 0 0 40px rgba(251, 191, 36, 0.4), 0 0 80px rgba(251, 191, 36, 0.15);
+  animation: moonRise 2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes moonRise {
+  0% { transform: translateY(100px) scale(0.5); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* --- Güneş Animasyonu --- */
+.sun {
+  position: absolute;
+  top: 8%;
+  right: 12%;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #fff7ed, #fdba74, #f97316);
+  box-shadow: 0 0 60px rgba(249, 115, 22, 0.5), 0 0 120px rgba(249, 115, 22, 0.2);
+  animation: sunRise 2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sun::after {
+  content: '';
+  position: absolute;
+  inset: -15px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.3), transparent 70%);
+  animation: sunPulse 3s ease-in-out infinite;
+}
+
+@keyframes sunRise {
+  0% { transform: translateY(100px) scale(0.3); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes sunPulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+/* --- Sis/Duman Parçacıkları --- */
+.fog-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.fog-particle-dark {
+  background: radial-gradient(circle, rgba(0,0,0,0.15), transparent 70%);
+}
+
+/* --- Ölüm Animasyonu --- */
+.death-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(0,0,0,0.95), rgba(20,0,0,0.98));
+  animation: deathFadeIn 0.5s ease-out;
+}
+
+@keyframes deathFadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.death-text {
+  animation: deathTextReveal 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes deathTextReveal {
+  0% { transform: scale(0.3) rotateY(90deg); opacity: 0; }
+  60% { transform: scale(1.1) rotateY(0deg); opacity: 1; }
+  100% { transform: scale(1) rotateY(0deg); opacity: 1; }
+}
+
+.tombstone-icon {
+  animation: tombstoneRise 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes tombstoneRise {
+  0% { transform: translateY(80px) scale(0.5); opacity: 0; }
+  70% { transform: translateY(-5px) scale(1.05); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* --- Oylama Count-Up --- */
+.vote-count-animate {
+  animation: voteCountPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes voteCountPop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+/* --- Konfeti Parçacıkları --- */
+.confetti-piece {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  top: -20px;
+  z-index: 200;
+  animation: confettiFall var(--duration, 3s) var(--delay, 0s) ease-in forwards;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* --- Fırtına Efekti (Mafya Zaferi) --- */
+.storm-container {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.lightning {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.15);
+  animation: lightningFlash var(--duration, 4s) infinite;
+  opacity: 0;
+}
+
+@keyframes lightningFlash {
+  0%, 100% { opacity: 0; }
+  1% { opacity: 0.6; }
+  2% { opacity: 0; }
+  3% { opacity: 0.3; }
+  4% { opacity: 0; }
+}
+
+/* --- Oyuncu Kartı Efektleri --- */
+.player-card-alive {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.player-card-alive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.player-card-dead {
+  position: relative;
+  overflow: hidden;
+}
+
+.player-card-dead::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -5%;
+  right: -5%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ef4444, transparent);
+  transform: rotate(-5deg);
+  opacity: 0.7;
+}
+
+.player-card-selected {
+  animation: selectedPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes selectedPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.6); }
+}
+
+.player-card-voted {
+  animation: votedShake 0.5s ease-in-out;
+}
+
+@keyframes votedShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+/* --- Ana Sayfa Sis --- */
+.home-fog {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.home-fog-layer {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  opacity: 0.03;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.5), transparent 60%);
+  will-change: transform;
+}
+
+/* --- Başlık Glitch Efekti --- */
+.title-glitch {
+  position: relative;
+}
+
+.title-glitch::before,
+.title-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.title-glitch::before {
+  animation: titleGlitchBefore 3s infinite;
+  color: #ff0040;
+  z-index: -1;
+  clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+}
+
+.title-glitch::after {
+  animation: titleGlitchAfter 3s infinite;
+  color: #00ff9f;
+  z-index: -1;
+  clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+}
+
+@keyframes titleGlitchBefore {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-1px); }
+  80% { transform: translateX(2px); }
+}
+
+@keyframes titleGlitchAfter {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(3px); }
+  40% { transform: translateX(-3px); }
+  60% { transform: translateX(1px); }
+  80% { transform: translateX(-2px); }
+}
+
+/* --- Lobby Fener/Mum --- */
+.candle-glow {
+  position: relative;
+}
+
+.candle-glow::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.2), transparent 70%);
+  animation: candleFlicker 2s ease-in-out infinite;
+}
+
+@keyframes candleFlicker {
+  0%, 100% { opacity: 0.6; transform: translateX(-50%) scale(1); }
+  25% { opacity: 0.8; transform: translateX(-48%) scale(1.05); }
+  50% { opacity: 0.5; transform: translateX(-52%) scale(0.95); }
+  75% { opacity: 0.9; transform: translateX(-50%) scale(1.02); }
+}
+
+/* --- Stagger Animasyonu (liste öğeleri) --- */
+.stagger-item {
+  opacity: 0;
+  animation: staggerFadeIn 0.5s ease-out forwards;
+}
+
+@keyframes staggerFadeIn {
+  0% { opacity: 0; transform: translateY(15px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Mesaj animasyonu --- */
 .message-enter {
   animation: slideUp 0.3s ease-out;
 }
@@ -90,13 +456,28 @@
   }
 }
 
-/* Timer pulse */
+/* --- Timer pulse --- */
 .timer-critical {
   animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   color: #dc2626;
 }
 
-/* Scrollbar */
+/* --- Gece Overlay Efekti --- */
+.night-fog-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0,0,0,0.3) 100%);
+  animation: fogBreath 6s ease-in-out infinite;
+}
+
+@keyframes fogBreath {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+/* --- Scrollbar --- */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -112,4 +493,13 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* --- Erişilebilirlik --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useGameStore } from "@/lib/store/game-store"
 import { useChatStore } from "@/lib/store/chat-store"
 import { getSocket } from "@/lib/socket"
-import type { GameState, ChatMessage, Player, Vote, GameLogEntry, RoleName, WinnerTeam, ChatChannel } from "@/types/game"
+import type { GameState, ChatMessage, Player, Vote, GameLogEntry, RoleName, WinnerTeam, ChatChannel, GamePhase } from "@/types/game"
 import { ROLE_DEFINITIONS } from "@/types/game"
 
 import { FazGostergesi } from "./faz-gostergesi"
@@ -15,6 +15,8 @@ import { GeceAksiyon } from "./gece-aksiyon"
 import { OylamaPaneli } from "./oylama-paneli"
 import { OyunLog } from "./oyun-log"
 import { RoleRevealAnimasyonu } from "./role-reveal-animasyonu"
+import { FazGecisAnimasyonu } from "./faz-gecis-animasyonu"
+import { OlumAnimasyonu } from "./olum-animasyonu"
 import { SonucEkrani } from "@/components/oyun-sonu/sonuc-ekrani"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -56,6 +58,15 @@ export function OyunTahtasi({ roomId, roomCode, roomName, currentUserId, isHost 
     players: Array<{ id: string; username: string; role: RoleName; isAlive: boolean }>
   } | null>(null)
 
+  // Animasyon state'leri
+  const [previousPhase, setPreviousPhase] = useState<GamePhase | null>(null)
+  const [currentPhaseForAnim, setCurrentPhaseForAnim] = useState<GamePhase | null>(null)
+  const [deathAnim, setDeathAnim] = useState<{
+    username: string
+    role: RoleName
+    reason: string
+  } | null>(null)
+
   // ---- Socket Event Listener'lari ----
   useEffect(() => {
     if (!socket.connected) return
@@ -86,6 +97,10 @@ export function OyunTahtasi({ roomId, roomCode, roomName, currentUserId, isHost 
 
     // Faz degisimi
     socket.on("game:phase-change", ({ phase, dayCount, timer }) => {
+      // Faz geçiş animasyonu
+      setPreviousPhase(currentPhaseForAnim)
+      setCurrentPhaseForAnim(phase)
+
       updatePhase(phase, dayCount, timer)
       setSelectedTarget(null)
       setHasSubmittedAction(false)
@@ -112,6 +127,10 @@ export function OyunTahtasi({ roomId, roomCode, roomName, currentUserId, isHost 
     // Oyuncu elenmesi
     socket.on("game:player-eliminated", ({ playerId, username, role, reason }) => {
       eliminatePlayer(playerId, role)
+
+      // Ölüm animasyonunu göster
+      setDeathAnim({ username, role, reason })
+
       addMessage({
         id: `system-elim-${Date.now()}`,
         playerId: "system",
@@ -235,7 +254,14 @@ export function OyunTahtasi({ roomId, roomCode, roomName, currentUserId, isHost 
   if (!gameState) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse text-lg text-gray-400">Oyun yukleniyor...</div>
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+            <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+            <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+          </div>
+          <p className="text-lg text-gray-400 animate-pulse">Oyun yukleniyor...</p>
+        </div>
       </div>
     )
   }
@@ -258,15 +284,39 @@ export function OyunTahtasi({ roomId, roomCode, roomName, currentUserId, isHost 
 
   return (
     <div className={`min-h-screen transition-all duration-1000 ${phaseClass} ${!phaseClass ? "bg-gradient-to-br from-gray-100 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900" : ""}`}>
+
+      {/* Faz Geçiş Animasyonu */}
+      {currentPhaseForAnim && (
+        <FazGecisAnimasyonu
+          phase={currentPhaseForAnim}
+          previousPhase={previousPhase}
+        />
+      )}
+
+      {/* Ölüm Animasyonu */}
+      {deathAnim && (
+        <OlumAnimasyonu
+          username={deathAnim.username}
+          role={deathAnim.role}
+          reason={deathAnim.reason}
+          onComplete={() => setDeathAnim(null)}
+        />
+      )}
+
+      {/* Gece Sis Overlay */}
+      {gameState.phase === "night" && (
+        <div className="night-fog-overlay" />
+      )}
+
       {gameState.phase === "role_reveal" && (
         <RoleRevealAnimasyonu myRole={myRole} />
       )}
 
       {/* Header */}
-      <header className="border-b border-gray-200 dark:border-gray-700/50 backdrop-blur-sm bg-white/50 dark:bg-black/20 p-3">
+      <header className="relative z-10 border-b border-gray-200 dark:border-gray-700/50 backdrop-blur-sm bg-white/50 dark:bg-black/20 p-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Swords className="h-5 w-5 text-red-600 dark:text-red-500" />
+            <Swords className="h-5 w-5 text-red-600 dark:text-red-500 animate-flicker" />
             <span className="font-bold text-gray-900 dark:text-white">Town of Arkaoda</span>
             <Badge variant="outline" className="text-gray-600 dark:text-gray-300">
               {roomName || roomCode}
@@ -281,14 +331,14 @@ export function OyunTahtasi({ roomId, roomCode, roomName, currentUserId, isHost 
               <span className="text-gray-400 text-xs hidden sm:block uppercase tracking-wider font-bold">Rolün:</span>
               <Badge
                 variant={ROLE_DEFINITIONS[myRole].team === "mafia" ? "mafia" : "town"}
-                className={`text-sm px-2 py-1 pr-3 shadow-[0_0_10px_rgba(255,255,255,0.1)] transition-all duration-500 hover:scale-105 ${ROLE_DEFINITIONS[myRole].team === "mafia" ? "hover:shadow-[0_0_15px_rgba(220,38,38,0.5)]" : "hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]"}`}
+                className={`text-sm px-2 py-1 pr-3 shadow-[0_0_10px_rgba(255,255,255,0.1)] transition-all duration-500 hover:scale-105 ${ROLE_DEFINITIONS[myRole].team === "mafia" ? "hover:shadow-[0_0_15px_rgba(220,38,38,0.5)] animate-breathe-red" : "hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-breathe"}`}
               >
                 <div className="w-6 h-6 rounded-full overflow-hidden mr-2 border border-white/20 inline-block bg-black align-middle">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={`/roles/${myRole.toLowerCase()}.png`}
                     alt={myRole}
-                    className="w-full h-full object-cover animate-pulse"
+                    className="w-full h-full object-cover"
                   />
                 </div>
                 {ROLE_DEFINITIONS[myRole].displayName}
@@ -300,13 +350,13 @@ export function OyunTahtasi({ roomId, roomCode, roomName, currentUserId, isHost 
 
       {/* Timer */}
       {gameState.timer > 0 && (
-        <div className="max-w-6xl mx-auto px-4 pt-3">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 pt-3 animate-fade-in">
           <Timer seconds={gameState.timer} phase={gameState.phase} />
         </div>
       )}
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto p-4">
+      <div className="relative z-10 max-w-6xl mx-auto p-4">
         <div className="grid lg:grid-cols-3 gap-4">
           {/* Sol: Oyuncu Listesi */}
           <div className="lg:col-span-1 space-y-2">
@@ -314,30 +364,35 @@ export function OyunTahtasi({ roomId, roomCode, roomName, currentUserId, isHost 
               Oyuncular ({gameState.players.filter((p) => p.isAlive).length}/{gameState.players.length})
             </h3>
             <div className="space-y-1.5">
-              {gameState.players.map((player) => (
-                <OyuncuKarti
+              {gameState.players.map((player, index) => (
+                <div
                   key={player.id}
-                  player={player}
-                  isMe={player.id === myPlayerId}
-                  phase={gameState.phase}
-                  votes={gameState.votes}
-                  myVote={myVote}
-                  onSelect={(id) => {
-                    if (gameState.phase === "day_voting") {
-                      handleVote(id)
-                    } else if (gameState.phase === "night") {
-                      setSelectedTarget(id)
-                    } else if (gameState.phase === "day_discussion" && myRole === "GARDIYAN" && isAlive) {
-                      handleGardiyanAction(id)
+                  className="stagger-item"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <OyuncuKarti
+                    player={player}
+                    isMe={player.id === myPlayerId}
+                    phase={gameState.phase}
+                    votes={gameState.votes}
+                    myVote={myVote}
+                    onSelect={(id) => {
+                      if (gameState.phase === "day_voting") {
+                        handleVote(id)
+                      } else if (gameState.phase === "night") {
+                        setSelectedTarget(id)
+                      } else if (gameState.phase === "day_discussion" && myRole === "GARDIYAN" && isAlive) {
+                        handleGardiyanAction(id)
+                      }
+                    }}
+                    selectable={
+                      (gameState.phase === "day_voting" && isAlive) ||
+                      (gameState.phase === "night" && isAlive && myRole !== "VATANDAS" && myRole !== "BASKAN" && myRole !== "GARDIYAN" && !hasSubmittedAction) ||
+                      (gameState.phase === "day_discussion" && isAlive && myRole === "GARDIYAN" && !hasSubmittedAction && player.id !== myPlayerId)
                     }
-                  }}
-                  selectable={
-                    (gameState.phase === "day_voting" && isAlive) ||
-                    (gameState.phase === "night" && isAlive && myRole !== "VATANDAS" && myRole !== "BASKAN" && myRole !== "GARDIYAN" && !hasSubmittedAction) ||
-                    (gameState.phase === "day_discussion" && isAlive && myRole === "GARDIYAN" && !hasSubmittedAction && player.id !== myPlayerId)
-                  }
-                  selectedTarget={selectedTarget || (gameState.phase === "day_discussion" && myRole === "GARDIYAN" && gameState.jailedPlayerId === player.id ? player.id : null)}
-                />
+                    selectedTarget={selectedTarget || (gameState.phase === "day_discussion" && myRole === "GARDIYAN" && gameState.jailedPlayerId === player.id ? player.id : null)}
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -346,37 +401,41 @@ export function OyunTahtasi({ roomId, roomCode, roomName, currentUserId, isHost 
           <div className="lg:col-span-1 space-y-4">
             {/* Gece Aksiyonu */}
             {gameState.phase === "night" && myRole && isAlive && (
-              <GeceAksiyon
-                myRole={myRole}
-                players={gameState.players}
-                myPlayerId={myPlayerId || ""}
-                selectedTarget={selectedTarget}
-                onSelectTarget={setSelectedTarget}
-                onConfirm={handleNightAction}
-                nightResult={nightResult}
-                hasSubmitted={hasSubmittedAction}
-              />
+              <div className="animate-rise-up">
+                <GeceAksiyon
+                  myRole={myRole}
+                  players={gameState.players}
+                  myPlayerId={myPlayerId || ""}
+                  selectedTarget={selectedTarget}
+                  onSelectTarget={setSelectedTarget}
+                  onConfirm={handleNightAction}
+                  nightResult={nightResult}
+                  hasSubmitted={hasSubmittedAction}
+                />
+              </div>
             )}
 
             {/* Oylama */}
             {gameState.phase === "day_voting" && (
-              <OylamaPaneli
-                players={gameState.players}
-                votes={gameState.votes}
-                myPlayerId={myPlayerId || ""}
-                myRole={myRole}
-                myVote={myVote}
-                onVote={handleVote}
-                isAlive={isAlive}
-              />
+              <div className="animate-rise-up">
+                <OylamaPaneli
+                  players={gameState.players}
+                  votes={gameState.votes}
+                  myPlayerId={myPlayerId || ""}
+                  myRole={myRole}
+                  myVote={myVote}
+                  onVote={handleVote}
+                  isAlive={isAlive}
+                />
+              </div>
             )}
 
             {/* Tartisma fazinda bilgi */}
             {gameState.phase === "day_discussion" && (
-              <Card className="bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-500/30 shadow-sm">
+              <Card className="bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-500/30 shadow-sm animate-rise-up">
                 <CardContent className="p-4 text-center">
                   {nightResult && (
-                    <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg p-3 text-blue-800 dark:text-blue-300 text-sm mb-3 text-left">
+                    <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg p-3 text-blue-800 dark:text-blue-300 text-sm mb-3 text-left animate-scale-in">
                       <span className="font-semibold">🔍 Gece Soruşturma Sonucu:</span> {nightResult}
                     </div>
                   )}
@@ -390,8 +449,9 @@ export function OyunTahtasi({ roomId, roomCode, roomName, currentUserId, isHost 
 
             {/* Gece - canli degilse */}
             {gameState.phase === "night" && !isAlive && (
-              <Card className="bg-white/80 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700">
+              <Card className="bg-white/80 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 animate-fade-in">
                 <CardContent className="p-4 text-center text-gray-500">
+                  <span className="text-2xl block mb-2">👻</span>
                   Elendin. Oyunu izliyorsun...
                 </CardContent>
               </Card>
